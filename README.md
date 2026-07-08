@@ -14,7 +14,7 @@ The installer only adds missing files. Existing files in `~/.copilot` are left u
 
 ## How coworkers should run it
 
-`npx install something` is not the right command shape.
+Do not use `npx install issta-copilot-setup`.
 
 Use one of these instead:
 
