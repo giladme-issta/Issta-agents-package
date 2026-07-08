@@ -1,0 +1,12 @@
+{
+  "name": "issta-copilot-setup",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Installs the shared Issta Copilot agents/skills/memory workspace into ~/.copilot",
+  "bin": {
+    "issta-copilot-setup": "bin/install.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
