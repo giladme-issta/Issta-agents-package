@@ -14,11 +14,13 @@ The installer only adds missing files. Existing files in `~/.copilot` are left u
 
 ## How coworkers should run it
 
-Do not use `npx install issta-copilot-setup`.
+Do not try command shapes like `npx install something`.
 
 Use one of these instead:
 
 ### From GitHub
+
+This uses the GitHub repository name, not the npm package name:
 
 ```bash
 npx github:giladme-issta/Issta-agents-package
