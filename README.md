@@ -14,7 +14,7 @@ The installer only adds missing files. Existing files in `~/.copilot` are left u
 
 ## How coworkers should run it
 
-Do not try command shapes like `npx install something`.
+Do not try command shapes like `npx install something`; `npx` runs a package executable, so use one of the exact commands below instead.
 
 Use one of these instead:
 
