@@ -293,6 +293,21 @@
   .flowlist b{color:var(--paper);}
   .flowlist code{color:var(--cyan);}
 
+  /* ---------- install ---------- */
+  .install-card .cmd{
+    display:block;
+    margin-top:10px;
+    padding:12px 14px;
+    border:1px solid var(--grid);
+    background:var(--void-2);
+    color:var(--paper);
+    font-family:var(--font-mono);
+    font-size:13px;
+    overflow-x:auto;
+  }
+  .install-card-github .card-id{color:var(--amber);border-color:var(--amber-dim);}
+  .install-note{margin-top:12px;font-size:13px;color:var(--paper-faint);}
+
   footer{padding:48px 0 80px;color:var(--paper-faint);font-size:13px;}
   footer .wrap{border-top:1px solid var(--grid-dim);padding-top:28px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;}
   footer code{color:var(--paper-dim);}
@@ -323,6 +338,7 @@
 
 <nav class="tabs">
   <div class="wrap">
+    <a href="#install">Install</a>
     <a href="#diagram">Diagram</a>
     <a href="#workflow">Workflow</a>
     <a href="#agents">Agents</a>
@@ -350,6 +366,47 @@
   <div class="callout reveal">
     <b>What this actually is.</b> Nothing here executes on its own — there is no runtime, server, or scheduler. This workspace is a set of GitHub Copilot custom chat agent definitions (<code class="mono">*.agent.md</code> frontmatter files), skill references (<code class="mono">SKILL.md</code>), and a hand-written file-based memory system, all wired together by convention through <code class="mono">copilot-instructions.md</code>. Every arrow on this page is an instruction one markdown file gives an LLM to read another markdown file, or to invoke another agent by name — enforced entirely by the model choosing to follow the written rules, not by code.
   </div>
+
+  <!-- ============ INSTALL ============ -->
+  <section id="install">
+    <div class="section-head"><span class="section-num">00</span><h2 class="section-title">Install Instructions</h2></div>
+    <p class="section-lede">Use the shared installer to copy this workspace into <code class="mono">~/.copilot</code>. It adds missing files only and leaves existing files in place.</p>
+
+    <div class="callout amber reveal">
+      <b>Use one of the exact commands below.</b> Do not try command shapes like <code class="mono">npx install something</code>; <code class="mono">npx</code> runs a package executable.
+    </div>
+
+    <div class="grid-cards reveal">
+      <details class="card hud amber install-card install-card-github" open>
+        <summary>
+          <div>
+            <span class="card-id">GitHub</span>
+            <div class="card-name">Install directly from GitHub</div>
+            <div class="card-role">Uses the repository name, not the npm package name.</div>
+          </div>
+          <span class="chevron">›</span>
+        </summary>
+        <div class="card-body">
+          <code class="cmd">npx github:giladme-issta/Issta-agents-package</code>
+        </div>
+      </details>
+
+      <details class="card hud install-card" open>
+        <summary>
+          <div>
+            <span class="card-id">npm</span>
+            <div class="card-name">Install from the published package</div>
+            <div class="card-role">Use this after the package has been published.</div>
+          </div>
+          <span class="chevron">›</span>
+        </summary>
+        <div class="card-body">
+          <code class="cmd">npx issta-copilot-setup</code>
+          <p class="install-note">Installed workspace contents: <code>agents/</code>, <code>skills/</code>, <code>memory/</code>, <code>help-docs/</code>, and <code>copilot-instructions.md</code>.</p>
+        </div>
+      </details>
+    </div>
+  </section>
 
   <!-- ============ DIAGRAM ============ -->
   <section id="diagram">
