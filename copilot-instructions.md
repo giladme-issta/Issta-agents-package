@@ -4,14 +4,24 @@ This workspace (`c:\Users\giladme\.copilot`) is the **central agent, skill, and 
 
 ---
 
-## 1. Always Start With Aluf⭐
+## 1. Routing — When to Use Aluf⭐ vs Direct Specialist
 
-**Aluf⭐ is the mandatory entry point for all development tasks.**
+**Use Aluf⭐ when:**
 
-- Do not implement code directly when an agent is available.
-- Do not invoke specialist agents without first going through Aluf⭐, unless you have been explicitly told to invoke a specialist directly.
-- Aluf⭐ uses a **task tier system** to scale the pipeline to the task size (see Section 7 below).
-- Agent file: `c:\Users\giladme\.copilot\agents\Aluf.agent.md`
+- Task tier is M or L/XL (multi-file logic change, new feature, architectural work)
+- Domain is ambiguous or the task spans multiple domains
+- You're unsure which specialist handles this area
+
+**Go directly to the specialist when:**
+
+- Domain is clear from the prompt (see Quick Domain Routing below)
+- Task tier is XS or S (single-file or small bugfix — see Section 7)
+- You already know which agent owns this file/layer
+
+**Direct access saves 1 full model turn + its entire context load.** Use it aggressively for small work.
+
+> **How**: In VS Code chat, type `@Agent-Name` to invoke a specialist directly.
+> `@Hotel-Expert-2017 [fast] fix the error message on HotelsController line 42`
 
 ---
 

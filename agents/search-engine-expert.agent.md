@@ -10,9 +10,11 @@ tools: [read, search, edit]
 
 1. **Load required skills** — read and apply before writing or modifying any code:
    - `c:\Users\giladme\.copilot\skills\issta-stack\SKILL.md` _(mandatory)_
-   - `c:\Users\giladme\.copilot\skills\token-budget\SKILL.md` _(mandatory — concise output rules)_
-   - `c:\Users\giladme\.copilot\skills\task-scope-guard\SKILL.md` _(mandatory — scope discipline)_
    - `c:\Users\giladme\.copilot\skills\angular-patterns\SKILL.md`
+
+   > **Token-budget (inline):** Bullets not prose · diffs not full files · no intro/outro · ≤30 lines of explanation per file changed.
+   > **Scope-guard (inline):** Only change what was explicitly asked · log out-of-scope findings under `## Out-of-Scope Observations`, don’t act on them · if scope must expand to complete the task, report it and stop.
+
 2. **Retrieve memory** — only if the delegation prompt from Aluf does **not** already include retrieved memory insights, OR if you were invoked directly (not via Aluf⭐): invoke `Memory-Agent` in **RETRIEVE mode** with domain `search-engine` and a one-line description of the current task.
 
 ---
