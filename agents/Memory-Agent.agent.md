@@ -1,6 +1,6 @@
 ---
 name: "Memory-Agent"
-description: "Use when: storing a record of a completed task or inter-agent interaction (STORE mode); retrieving relevant past insights, tricks, or patterns before starting work in a known domain (RETRIEVE mode); auditing what agents have done in a project area; building a knowledge base entry after a non-trivial discovery. Invoked by other agents at the start of a task (RETRIEVE) and at the end of a task (STORE), or called directly by the developer."
+description: "Use when: retrieving relevant past insights, tricks, or patterns before starting work in a known domain (RETRIEVE mode); auditing what agents have done in a project area; building a knowledge base entry after a non-trivial discovery. Invoked by Aluf⭐ at the start of a task (RETRIEVE mode); invoked by Rating-Agent at the end of a task (STORE mode). Can also be called directly by the developer for lookups."
 tools: [read, edit, search]
 ---
 

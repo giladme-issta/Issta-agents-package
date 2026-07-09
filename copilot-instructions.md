@@ -10,22 +10,23 @@ This workspace (`c:\Users\giladme\.copilot`) is the **central agent, skill, and 
 
 - Do not implement code directly when an agent is available.
 - Do not invoke specialist agents without first going through Aluf⭐, unless you have been explicitly told to invoke a specialist directly.
-- Aluf⭐ handles: task analysis → memory retrieval → specialist delegation → code review → memory store → agent rating.
+- Aluf⭐ handles: task analysis → memory retrieval → specialist delegation → code review → rating delegation → final report.
 - Agent file: `c:\Users\giladme\.copilot\agents\Aluf.agent.md`
 
 ---
 
 ## 2. Agent Registry
 
-| Agent                          | Trigger domain                                                          |
-| ------------------------------ | ----------------------------------------------------------------------- |
-| `Hotel-Expert-2017`            | Issta2017 ASP.NET MVC 5 — hotel search, results, checkout, GTM tracking |
-| `Hotel-Expert-V5`              | ITS V5, Gimmonix adapter, GimmonixWrapperB2C, ITS.Adapters.\*           |
-| `Search Engine Expert`         | Angular search engine widget/lib, engine components, ENGINE_REGISTRY    |
-| `WebAgent-Expert-Hotel-Client` | Angular hotel results page, filters, map, GA4 tracking                  |
-| `WebAgent-Hotel-Server-Expert` | .NET 10 WebAgent hotel server, HotelsBL, Workers, DI                    |
-| `Code-Reviewer`                | Final quality gate after any code is written or modified                |
-| `Memory-Agent`                 | Knowledge persistence — RETRIEVE before a task, STORE after             |
+| Agent                          | Trigger domain                                                                                      |
+| ------------------------------ | --------------------------------------------------------------------------------------------------- |
+| `Hotel-Expert-2017`            | Issta2017 ASP.NET MVC 5 — hotel search, results, checkout, GTM tracking                             |
+| `Hotel-Expert-V5`              | ITS V5, Gimmonix adapter, GimmonixWrapperB2C, ITS.Adapters.\*                                       |
+| `Search Engine Expert`         | Angular search engine widget/lib, engine components, ENGINE_REGISTRY                                |
+| `WebAgent-Expert-Hotel-Client` | Angular hotel results page, filters, map, GA4 tracking                                              |
+| `WebAgent-Hotel-Server-Expert` | .NET 10 WebAgent hotel server, HotelsBL, Workers, DI                                                |
+| `Code-Reviewer`                | Final quality gate after any code is written or modified                                            |
+| `Rating-Agent`                 | Performance scoring — invoked by Aluf⭐ after review; rates agents, stores records via Memory-Agent |
+| `Memory-Agent`                 | Knowledge persistence — RETRIEVE before a task, STORE after (via Rating-Agent)                      |
 
 All agent files live in: `c:\Users\giladme\.copilot\agents\`
 
@@ -44,7 +45,7 @@ Every specialist agent has a **Before You Begin** block in its own file that lis
 | `gtm-ga4-tracking`  | Hotel-Expert-2017, WebAgent-Expert-Hotel-Client (analytics tasks) |
 | `gimmonix-adapter`  | Hotel-Expert-V5                                                   |
 | `memory-structure`  | Memory-Agent                                                      |
-| `rating-skill`      | Aluf⭐ only                                                       |
+| `rating-skill`      | Rating-Agent only                                                 |
 
 Skills directory: `c:\Users\giladme\.copilot\skills\`
 Master routing guide: `c:\Users\giladme\.copilot\skills\skill-route\SKILL.md`

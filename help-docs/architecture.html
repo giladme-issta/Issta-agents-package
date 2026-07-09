@@ -1,799 +1,2507 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Command Deck — Issta Agent Architecture</title>
-<meta name="description" content="Reference map of the Aluf⭐ agent workspace: orchestrator, specialists, skills, and the file-based memory system." />
-<style>
-  :root{
-    --void:#0b0f14;
-    --void-2:#0e141c;
-    --panel:#121a24;
-    --panel-raised:#17202b;
-    --grid:#202b38;
-    --grid-dim:#17202b;
-    --amber:#f0a93e;
-    --amber-dim:rgba(240,169,62,.32);
-    --amber-soft:rgba(240,169,62,.12);
-    --cyan:#4fd5e0;
-    --cyan-dim:rgba(79,213,224,.28);
-    --cyan-soft:rgba(79,213,224,.10);
-    --rose:#e8556b;
-    --rose-dim:rgba(232,85,107,.32);
-    --rose-soft:rgba(232,85,107,.10);
-    --paper:#e8edf2;
-    --paper-dim:#8b98a8;
-    --paper-faint:#5b6779;
-    --font-display:"Segoe UI Semibold","Segoe UI","Inter","Helvetica Neue",Arial,sans-serif;
-    --font-body:"Segoe UI","Inter",system-ui,-apple-system,sans-serif;
-    --font-mono:"Cascadia Mono","Cascadia Code","JetBrains Mono",Consolas,"SF Mono",Menlo,monospace;
-    --maxw:1180px;
-  }
-  *{box-sizing:border-box;}
-  html{background:var(--void);}
-  body{
-    margin:0;
-    background:
-      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(240,169,62,.05), transparent 60%),
-      radial-gradient(ellipse 900px 600px at 100% 10%, rgba(79,213,224,.06), transparent 55%),
-      var(--void);
-    color:var(--paper);
-    font-family:var(--font-body);
-    font-size:16px;
-    line-height:1.65;
-    -webkit-font-smoothing:antialiased;
-  }
-  a{color:var(--cyan);}
-  ::selection{background:var(--amber-dim);color:#fff;}
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Command Deck — Issta Agent Architecture</title>
+    <meta
+      name="description"
+      content="Reference map of the Aluf⭐ agent workspace: orchestrator, specialists, skills, and the file-based memory system."
+    />
+    <style>
+      :root {
+        --void: #0b0f14;
+        --void-2: #0e141c;
+        --panel: #121a24;
+        --panel-raised: #17202b;
+        --grid: #202b38;
+        --grid-dim: #17202b;
+        --amber: #f0a93e;
+        --amber-dim: rgba(240, 169, 62, 0.32);
+        --amber-soft: rgba(240, 169, 62, 0.12);
+        --cyan: #4fd5e0;
+        --cyan-dim: rgba(79, 213, 224, 0.28);
+        --cyan-soft: rgba(79, 213, 224, 0.1);
+        --rose: #e8556b;
+        --rose-dim: rgba(232, 85, 107, 0.32);
+        --rose-soft: rgba(232, 85, 107, 0.1);
+        --paper: #e8edf2;
+        --paper-dim: #8b98a8;
+        --paper-faint: #5b6779;
+        --font-display:
+          "Segoe UI Semibold", "Segoe UI", "Inter", "Helvetica Neue", Arial,
+          sans-serif;
+        --font-body: "Segoe UI", "Inter", system-ui, -apple-system, sans-serif;
+        --font-mono:
+          "Cascadia Mono", "Cascadia Code", "JetBrains Mono", Consolas,
+          "SF Mono", Menlo, monospace;
+        --maxw: 1180px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        background: var(--void);
+      }
+      body {
+        margin: 0;
+        background:
+          radial-gradient(
+            ellipse 900px 500px at 15% -10%,
+            rgba(240, 169, 62, 0.05),
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse 900px 600px at 100% 10%,
+            rgba(79, 213, 224, 0.06),
+            transparent 55%
+          ),
+          var(--void);
+        color: var(--paper);
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.65;
+        -webkit-font-smoothing: antialiased;
+      }
+      a {
+        color: var(--cyan);
+      }
+      ::selection {
+        background: var(--amber-dim);
+        color: #fff;
+      }
 
-  h1,h2,h3,h4{font-family:var(--font-display);font-weight:600;margin:0;color:var(--paper);}
-  code, .mono{font-family:var(--font-mono);}
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-family: var(--font-display);
+        font-weight: 600;
+        margin: 0;
+        color: var(--paper);
+      }
+      code,
+      .mono {
+        font-family: var(--font-mono);
+      }
 
-  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px;}
+      .wrap {
+        max-width: var(--maxw);
+        margin: 0 auto;
+        padding: 0 28px;
+      }
 
-  /* ---------- console top bar ---------- */
-  .consolebar{
-    border-bottom:1px solid var(--grid);
-    background:var(--void-2);
-    font-family:var(--font-mono);
-    font-size:12px;
-    letter-spacing:.04em;
-    color:var(--paper-faint);
-  }
-  .consolebar .wrap{
-    display:flex;flex-wrap:wrap;gap:6px 22px;padding:10px 28px;align-items:center;
-  }
-  .consolebar .dot{width:7px;height:7px;border-radius:50%;background:var(--amber);display:inline-block;margin-inline-end:8px;box-shadow:0 0 8px var(--amber);animation:blink 2.6s ease-in-out infinite;}
-  @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
-  .consolebar b{color:var(--paper-dim);font-weight:600;}
+      /* ---------- console top bar ---------- */
+      .consolebar {
+        border-bottom: 1px solid var(--grid);
+        background: var(--void-2);
+        font-family: var(--font-mono);
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        color: var(--paper-faint);
+      }
+      .consolebar .wrap {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 22px;
+        padding: 10px 28px;
+        align-items: center;
+      }
+      .consolebar .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--amber);
+        display: inline-block;
+        margin-inline-end: 8px;
+        box-shadow: 0 0 8px var(--amber);
+        animation: blink 2.6s ease-in-out infinite;
+      }
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.35;
+        }
+      }
+      .consolebar b {
+        color: var(--paper-dim);
+        font-weight: 600;
+      }
 
-  /* ---------- sticky nav ---------- */
-  nav.tabs{
-    position:sticky;top:0;z-index:40;
-    background:rgba(11,15,20,.92);
-    backdrop-filter:blur(6px);
-    border-bottom:1px solid var(--grid);
-  }
-  nav.tabs .wrap{display:flex;gap:2px;overflow-x:auto;padding:0 28px;}
-  nav.tabs a{
-    font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;
-    color:var(--paper-dim);text-decoration:none;white-space:nowrap;
-    padding:14px 14px;border-bottom:2px solid transparent;
-  }
-  nav.tabs a:hover{color:var(--paper);border-bottom-color:var(--grid);}
-  nav.tabs a:focus-visible{outline:2px solid var(--cyan);outline-offset:-2px;}
+      /* ---------- sticky nav ---------- */
+      nav.tabs {
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        background: rgba(11, 15, 20, 0.92);
+        backdrop-filter: blur(6px);
+        border-bottom: 1px solid var(--grid);
+      }
+      nav.tabs .wrap {
+        display: flex;
+        gap: 2px;
+        overflow-x: auto;
+        padding: 0 28px;
+      }
+      nav.tabs a {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--paper-dim);
+        text-decoration: none;
+        white-space: nowrap;
+        padding: 14px 14px;
+        border-bottom: 2px solid transparent;
+      }
+      nav.tabs a:hover {
+        color: var(--paper);
+        border-bottom-color: var(--grid);
+      }
+      nav.tabs a:focus-visible {
+        outline: 2px solid var(--cyan);
+        outline-offset: -2px;
+      }
 
-  /* ---------- hero ---------- */
-  header.hero{padding:64px 0 40px;position:relative;overflow:hidden;}
-  .eyebrow{
-    font-family:var(--font-mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;
-    color:var(--cyan);margin:0 0 14px;
-  }
-  .eyebrow::before{content:"◈ ";}
-  h1.title{font-size:clamp(40px,6vw,68px);letter-spacing:-.01em;text-transform:uppercase;line-height:1.02;}
-  h1.title .accent{color:var(--amber);}
-  p.subtitle{max-width:640px;color:var(--paper-dim);font-size:18px;margin-top:18px;}
-  .hero-badge{
-    position:absolute;top:40px;inset-inline-end:28px;
-    width:120px;height:120px;border-radius:50%;
-    border:1px solid var(--grid);
-    display:flex;align-items:center;justify-content:center;
-    font-family:var(--font-mono);color:var(--amber-dim);
-  }
-  .hero-badge svg{width:100%;height:100%;}
-  @media (max-width:820px){.hero-badge{display:none;}}
+      /* ---------- hero ---------- */
+      header.hero {
+        padding: 64px 0 40px;
+        position: relative;
+        overflow: hidden;
+      }
+      .eyebrow {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--cyan);
+        margin: 0 0 14px;
+      }
+      .eyebrow::before {
+        content: "◈ ";
+      }
+      h1.title {
+        font-size: clamp(40px, 6vw, 68px);
+        letter-spacing: -0.01em;
+        text-transform: uppercase;
+        line-height: 1.02;
+      }
+      h1.title .accent {
+        color: var(--amber);
+      }
+      p.subtitle {
+        max-width: 640px;
+        color: var(--paper-dim);
+        font-size: 18px;
+        margin-top: 18px;
+      }
+      .hero-badge {
+        position: absolute;
+        top: 40px;
+        inset-inline-end: 28px;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        border: 1px solid var(--grid);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-mono);
+        color: var(--amber-dim);
+      }
+      .hero-badge svg {
+        width: 100%;
+        height: 100%;
+      }
+      @media (max-width: 820px) {
+        .hero-badge {
+          display: none;
+        }
+      }
 
-  /* ---------- HUD frame corner brackets (signature motif) ---------- */
-  .hud{
-    position:relative;
-    background:var(--panel);
-    border:1px solid var(--grid);
-  }
-  .hud::before{
-    content:"";position:absolute;inset:0;pointer-events:none;
-    --c:var(--fc,var(--cyan-dim));
-    background:
-      linear-gradient(var(--c),var(--c)) top left/16px 1px no-repeat,
-      linear-gradient(var(--c),var(--c)) top left/1px 16px no-repeat,
-      linear-gradient(var(--c),var(--c)) top right/16px 1px no-repeat,
-      linear-gradient(var(--c),var(--c)) top right/1px 16px no-repeat,
-      linear-gradient(var(--c),var(--c)) bottom left/16px 1px no-repeat,
-      linear-gradient(var(--c),var(--c)) bottom left/1px 16px no-repeat,
-      linear-gradient(var(--c),var(--c)) bottom right/16px 1px no-repeat,
-      linear-gradient(var(--c),var(--c)) bottom right/1px 16px no-repeat;
-  }
-  .hud.amber{--fc:var(--amber-dim);}
-  .hud.rose{--fc:var(--rose-dim);}
+      /* ---------- HUD frame corner brackets (signature motif) ---------- */
+      .hud {
+        position: relative;
+        background: var(--panel);
+        border: 1px solid var(--grid);
+      }
+      .hud::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        --c: var(--fc, var(--cyan-dim));
+        background:
+          linear-gradient(var(--c), var(--c)) top left/16px 1px no-repeat,
+          linear-gradient(var(--c), var(--c)) top left/1px 16px no-repeat,
+          linear-gradient(var(--c), var(--c)) top right/16px 1px no-repeat,
+          linear-gradient(var(--c), var(--c)) top right/1px 16px no-repeat,
+          linear-gradient(var(--c), var(--c)) bottom left/16px 1px no-repeat,
+          linear-gradient(var(--c), var(--c)) bottom left/1px 16px no-repeat,
+          linear-gradient(var(--c), var(--c)) bottom right/16px 1px no-repeat,
+          linear-gradient(var(--c), var(--c)) bottom right/1px 16px no-repeat;
+      }
+      .hud.amber {
+        --fc: var(--amber-dim);
+      }
+      .hud.rose {
+        --fc: var(--rose-dim);
+      }
 
-  section{padding:64px 0;border-top:1px solid var(--grid-dim);}
-  section:first-of-type{border-top:none;}
-  .section-head{display:flex;align-items:baseline;gap:16px;margin-bottom:8px;flex-wrap:wrap;}
-  .section-num{font-family:var(--font-mono);color:var(--paper-faint);font-size:14px;}
-  h2.section-title{font-size:28px;letter-spacing:.01em;text-transform:uppercase;}
-  p.section-lede{color:var(--paper-dim);max-width:760px;margin:14px 0 34px;}
+      section {
+        padding: 64px 0;
+        border-top: 1px solid var(--grid-dim);
+      }
+      section:first-of-type {
+        border-top: none;
+      }
+      .section-head {
+        display: flex;
+        align-items: baseline;
+        gap: 16px;
+        margin-bottom: 8px;
+        flex-wrap: wrap;
+      }
+      .section-num {
+        font-family: var(--font-mono);
+        color: var(--paper-faint);
+        font-size: 14px;
+      }
+      h2.section-title {
+        font-size: 28px;
+        letter-spacing: 0.01em;
+        text-transform: uppercase;
+      }
+      p.section-lede {
+        color: var(--paper-dim);
+        max-width: 760px;
+        margin: 14px 0 34px;
+      }
 
-  .reveal{opacity:0;transform:translateY(14px);transition:opacity .6s ease, transform .6s ease;}
-  .reveal.in-view{opacity:1;transform:none;}
+      .reveal {
+        opacity: 0;
+        transform: translateY(14px);
+        transition:
+          opacity 0.6s ease,
+          transform 0.6s ease;
+      }
+      .reveal.in-view {
+        opacity: 1;
+        transform: none;
+      }
 
-  /* ---------- callout ---------- */
-  .callout{
-    padding:20px 24px;margin:0 0 40px;
-    border-inline-start:3px solid var(--cyan);
-    background:var(--cyan-soft);
-    font-size:15px;color:var(--paper-dim);
-  }
-  .callout b{color:var(--paper);}
-  .callout.amber{border-color:var(--amber);background:var(--amber-soft);}
+      /* ---------- callout ---------- */
+      .callout {
+        padding: 20px 24px;
+        margin: 0 0 40px;
+        border-inline-start: 3px solid var(--cyan);
+        background: var(--cyan-soft);
+        font-size: 15px;
+        color: var(--paper-dim);
+      }
+      .callout b {
+        color: var(--paper);
+      }
+      .callout.amber {
+        border-color: var(--amber);
+        background: var(--amber-soft);
+      }
 
-  /* ---------- diagram ---------- */
-  .diagram-panel{padding:20px;}
-  .legend{
-    display:flex;flex-wrap:wrap;gap:18px 28px;
-    font-family:var(--font-mono);font-size:12px;color:var(--paper-dim);
-    padding:0 6px 18px;border-bottom:1px solid var(--grid-dim);margin-bottom:10px;
-  }
-  .legend span{display:inline-flex;align-items:center;gap:8px;}
-  .swatch{width:22px;height:2px;display:inline-block;}
-  .swatch.amberline{background:var(--amber);box-shadow:0 0 6px var(--amber);}
-  .swatch.dashline{background:repeating-linear-gradient(90deg,var(--rose) 0 6px,transparent 6px 10px);}
-  .swatch.dotline{background:repeating-linear-gradient(90deg,var(--cyan) 0 2px,transparent 2px 6px);opacity:.7;}
-  .dot-sw{width:11px;height:11px;border-radius:50%;display:inline-block;}
-  .dot-sw.node-amber{background:var(--void);border:2px solid var(--amber);}
-  .dot-sw.node-cyan{background:var(--void);border:2px solid var(--cyan);}
-  .dot-sw.node-rose{background:var(--void);border:2px solid var(--rose);}
+      /* ---------- diagram ---------- */
+      .diagram-panel {
+        padding: 20px;
+      }
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px 28px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--paper-dim);
+        padding: 0 6px 18px;
+        border-bottom: 1px solid var(--grid-dim);
+        margin-bottom: 10px;
+      }
+      .legend span {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .swatch {
+        width: 22px;
+        height: 2px;
+        display: inline-block;
+      }
+      .swatch.amberline {
+        background: var(--amber);
+        box-shadow: 0 0 6px var(--amber);
+      }
+      .swatch.dashline {
+        background: repeating-linear-gradient(
+          90deg,
+          var(--rose) 0 6px,
+          transparent 6px 10px
+        );
+      }
+      .swatch.dotline {
+        background: repeating-linear-gradient(
+          90deg,
+          var(--cyan) 0 2px,
+          transparent 2px 6px
+        );
+        opacity: 0.7;
+      }
+      .dot-sw {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        display: inline-block;
+      }
+      .dot-sw.node-amber {
+        background: var(--void);
+        border: 2px solid var(--amber);
+      }
+      .dot-sw.node-cyan {
+        background: var(--void);
+        border: 2px solid var(--cyan);
+      }
+      .dot-sw.node-rose {
+        background: var(--void);
+        border: 2px solid var(--rose);
+      }
 
-  .diagram-scroll{overflow-x:auto;}
-  #orgsvg{min-width:760px;width:100%;height:auto;display:block;}
-  #orgsvg text{font-family:var(--font-mono);fill:var(--paper-dim);user-select:none;}
-  #orgsvg .callsign{font-family:var(--font-mono);font-weight:700;fill:var(--paper);font-size:15px;text-anchor:middle;}
-  #orgsvg .nodelabel{font-size:12.5px;text-anchor:middle;fill:var(--paper-dim);}
-  #orgsvg .skilllabel{font-size:10.5px;text-anchor:middle;fill:var(--paper-faint);}
-  #orgsvg .memlabel{font-size:10px;text-anchor:middle;fill:var(--paper-faint);}
+      .diagram-scroll {
+        overflow-x: auto;
+      }
+      #orgsvg {
+        min-width: 760px;
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+      #orgsvg text {
+        font-family: var(--font-mono);
+        fill: var(--paper-dim);
+        user-select: none;
+      }
+      #orgsvg .callsign {
+        font-family: var(--font-mono);
+        font-weight: 700;
+        fill: var(--paper);
+        font-size: 15px;
+        text-anchor: middle;
+      }
+      #orgsvg .nodelabel {
+        font-size: 12.5px;
+        text-anchor: middle;
+        fill: var(--paper-dim);
+      }
+      #orgsvg .skilllabel {
+        font-size: 10.5px;
+        text-anchor: middle;
+        fill: var(--paper-faint);
+      }
+      #orgsvg .memlabel {
+        font-size: 10px;
+        text-anchor: middle;
+        fill: var(--paper-faint);
+      }
 
-  #orgsvg .ring{fill:none;stroke:var(--grid);stroke-width:1;}
-  #orgsvg .cross{stroke:var(--grid-dim);stroke-width:1;}
+      #orgsvg .ring {
+        fill: none;
+        stroke: var(--grid);
+        stroke-width: 1;
+      }
+      #orgsvg .cross {
+        stroke: var(--grid-dim);
+        stroke-width: 1;
+      }
 
-  #orgsvg .arc{fill:none;stroke:var(--amber);stroke-width:1.6;opacity:.55;transition:opacity .25s;}
-  #orgsvg .arc.dashed{stroke:var(--rose);stroke-dasharray:5 5;opacity:.6;}
-  #orgsvg .skillline{stroke:var(--cyan);stroke-width:1;stroke-dasharray:1 4;opacity:.22;transition:opacity .25s, stroke-width .25s;}
-  #orgsvg .memline{stroke:var(--paper-faint);stroke-width:1;opacity:.35;}
+      #orgsvg .arc {
+        fill: none;
+        stroke: var(--amber);
+        stroke-width: 1.6;
+        opacity: 0.55;
+        transition: opacity 0.25s;
+      }
+      #orgsvg .arc.dashed {
+        stroke: var(--rose);
+        stroke-dasharray: 5 5;
+        opacity: 0.6;
+      }
+      #orgsvg .skillline {
+        stroke: var(--cyan);
+        stroke-width: 1;
+        stroke-dasharray: 1 4;
+        opacity: 0.22;
+        transition:
+          opacity 0.25s,
+          stroke-width 0.25s;
+      }
+      #orgsvg .memline {
+        stroke: var(--paper-faint);
+        stroke-width: 1;
+        opacity: 0.35;
+      }
 
-  #orgsvg .node{cursor:pointer;}
-  #orgsvg .node circle.ring-outer{fill:var(--panel-raised);stroke-width:2;transition:filter .2s, stroke .2s;}
-  #orgsvg .node.agent circle.ring-outer{stroke:var(--cyan);r:34;}
-  #orgsvg .node.hub circle.ring-outer{stroke:var(--amber);r:46;fill:var(--panel-raised);}
-  #orgsvg .node.gate circle.ring-outer{stroke:var(--rose);r:34;}
-  #orgsvg .node.mem circle.ring-outer{stroke:var(--amber);stroke-dasharray:3 3;r:34;}
-  #orgsvg .node:hover circle.ring-outer,#orgsvg .node.active circle.ring-outer{filter:drop-shadow(0 0 8px currentColor);}
-  #orgsvg .node.agent:focus-visible circle.ring-outer,#orgsvg .node:hover.agent circle.ring-outer{stroke:var(--paper);}
+      #orgsvg .node {
+        cursor: pointer;
+      }
+      #orgsvg .node circle.ring-outer {
+        fill: var(--panel-raised);
+        stroke-width: 2;
+        transition:
+          filter 0.2s,
+          stroke 0.2s;
+      }
+      #orgsvg .node.agent circle.ring-outer {
+        stroke: var(--cyan);
+        r: 34;
+      }
+      #orgsvg .node.hub circle.ring-outer {
+        stroke: var(--amber);
+        r: 46;
+        fill: var(--panel-raised);
+      }
+      #orgsvg .node.gate circle.ring-outer {
+        stroke: var(--rose);
+        r: 34;
+      }
+      #orgsvg .node.mem circle.ring-outer {
+        stroke: var(--amber);
+        stroke-dasharray: 3 3;
+        r: 34;
+      }
+      #orgsvg .node:hover circle.ring-outer,
+      #orgsvg .node.active circle.ring-outer {
+        filter: drop-shadow(0 0 8px currentColor);
+      }
+      #orgsvg .node.agent:focus-visible circle.ring-outer,
+      #orgsvg .node:hover.agent circle.ring-outer {
+        stroke: var(--paper);
+      }
 
-  #orgsvg .skillnode{fill:var(--void-2);stroke:var(--cyan);stroke-width:1.3;cursor:pointer;}
-  #orgsvg .skillnode:hover,#orgsvg .skillnode.active{fill:var(--cyan-soft);filter:drop-shadow(0 0 6px var(--cyan));}
-  #orgsvg .memnode{fill:var(--void-2);stroke:var(--paper-faint);stroke-width:1;}
+      #orgsvg .skillnode {
+        fill: var(--void-2);
+        stroke: var(--cyan);
+        stroke-width: 1.3;
+        cursor: pointer;
+      }
+      #orgsvg .skillnode:hover,
+      #orgsvg .skillnode.active {
+        fill: var(--cyan-soft);
+        filter: drop-shadow(0 0 6px var(--cyan));
+      }
+      #orgsvg .memnode {
+        fill: var(--void-2);
+        stroke: var(--paper-faint);
+        stroke-width: 1;
+      }
 
-  #orgsvg.focused .arc:not(.hl),
-  #orgsvg.focused .skillline:not(.hl),
-  #orgsvg.focused .memline:not(.hl){opacity:.05;}
-  #orgsvg.focused .node:not(.hl) circle.ring-outer{opacity:.25;}
-  #orgsvg.focused .node:not(.hl) text{opacity:.25;}
-  #orgsvg .arc.hl{opacity:1;stroke-width:2.4;}
-  #orgsvg .skillline.hl{opacity:.9;stroke-width:1.6;}
+      #orgsvg.focused .arc:not(.hl),
+      #orgsvg.focused .skillline:not(.hl),
+      #orgsvg.focused .memline:not(.hl) {
+        opacity: 0.05;
+      }
+      #orgsvg.focused .node:not(.hl) circle.ring-outer {
+        opacity: 0.25;
+      }
+      #orgsvg.focused .node:not(.hl) text {
+        opacity: 0.25;
+      }
+      #orgsvg .arc.hl {
+        opacity: 1;
+        stroke-width: 2.4;
+      }
+      #orgsvg .skillline.hl {
+        opacity: 0.9;
+        stroke-width: 1.6;
+      }
 
-  .pulse{filter:drop-shadow(0 0 5px currentColor);}
+      .pulse {
+        filter: drop-shadow(0 0 5px currentColor);
+      }
 
-  .diagram-foot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:14px;font-family:var(--font-mono);font-size:12px;color:var(--paper-faint);}
-  #clearfocus{
-    background:none;border:1px solid var(--grid);color:var(--paper-dim);
-    font-family:var(--font-mono);font-size:12px;letter-spacing:.04em;
-    padding:6px 12px;cursor:pointer;
-  }
-  #clearfocus:hover{border-color:var(--amber);color:var(--amber);}
+      .diagram-foot {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding-top: 14px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--paper-faint);
+      }
+      #clearfocus {
+        background: none;
+        border: 1px solid var(--grid);
+        color: var(--paper-dim);
+        font-family: var(--font-mono);
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        padding: 6px 12px;
+        cursor: pointer;
+      }
+      #clearfocus:hover {
+        border-color: var(--amber);
+        color: var(--amber);
+      }
 
-  /* ---------- workflow stepper ---------- */
-  .stepper{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
-  @media (max-width:980px){.stepper{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));}}
-  .step{background:var(--panel);border:1px solid var(--grid);padding:18px 16px;position:relative;}
-  .step .n{font-family:var(--font-mono);color:var(--amber);font-size:22px;font-weight:700;}
-  .step h4{font-size:14px;text-transform:uppercase;letter-spacing:.03em;margin:8px 0 8px;}
-  .step p{margin:0;color:var(--paper-dim);font-size:13px;}
-  .step:not(:last-child)::after{
-    content:"→";position:absolute;top:18px;inset-inline-end:-14px;color:var(--paper-faint);
-    display:none;
-  }
-  @media (min-width:981px){.step:not(:last-child)::after{display:block;}}
+      /* ---------- workflow stepper ---------- */
+      .stepper {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 2px;
+      }
+      @media (max-width: 980px) {
+        .stepper {
+          grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        }
+      }
+      .step {
+        background: var(--panel);
+        border: 1px solid var(--grid);
+        padding: 18px 16px;
+        position: relative;
+      }
+      .step .n {
+        font-family: var(--font-mono);
+        color: var(--amber);
+        font-size: 22px;
+        font-weight: 700;
+      }
+      .step h4 {
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        margin: 8px 0 8px;
+      }
+      .step p {
+        margin: 0;
+        color: var(--paper-dim);
+        font-size: 13px;
+      }
+      .step:not(:last-child)::after {
+        content: "→";
+        position: absolute;
+        top: 18px;
+        inset-inline-end: -14px;
+        color: var(--paper-faint);
+        display: none;
+      }
+      @media (min-width: 981px) {
+        .step:not(:last-child)::after {
+          display: block;
+        }
+      }
+      .hook-badge {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        padding: 1px 5px;
+        margin-inline-start: 4px;
+        border: 1px solid var(--rose-dim);
+        color: var(--rose);
+        background: var(--rose-soft);
+        vertical-align: middle;
+        white-space: nowrap;
+      }
 
-  /* ---------- agent cards ---------- */
-  .grid-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;}
-  details.card{padding:22px;--fc:var(--cyan-dim);}
-  details.card[data-role="hub"]{--fc:var(--amber-dim);}
-  details.card[data-role="gate"]{--fc:var(--rose-dim);}
-  details.card summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;}
-  details.card summary::-webkit-details-marker{display:none;}
-  .card-id{
-    font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;
-    color:var(--cyan);border:1px solid var(--cyan-dim);padding:2px 8px;
-  }
-  details.card[data-role="hub"] .card-id{color:var(--amber);border-color:var(--amber-dim);}
-  details.card[data-role="gate"] .card-id{color:var(--rose);border-color:var(--rose-dim);}
-  .card-name{font-family:var(--font-display);font-size:17px;margin-top:10px;}
-  .card-role{color:var(--paper-dim);font-size:13px;margin-top:4px;}
-  .chevron{color:var(--paper-faint);transition:transform .2s;font-family:var(--font-mono);}
-  details[open] .chevron{transform:rotate(90deg);}
-  .card-body{margin-top:16px;padding-top:16px;border-top:1px solid var(--grid-dim);font-size:14px;color:var(--paper-dim);}
-  .card-body h5{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--paper-faint);margin:14px 0 6px;}
-  .card-body h5:first-child{margin-top:0;}
-  .badges{display:flex;flex-wrap:wrap;gap:6px;}
-  .badge{
-    font-family:var(--font-mono);font-size:11px;padding:3px 8px;
-    border:1px solid var(--grid);color:var(--paper-dim);background:var(--void-2);
-  }
-  .badge.skill{border-color:var(--cyan-dim);color:var(--cyan);}
-  .card-body ul{margin:4px 0;padding-inline-start:18px;}
-  .card-body code{font-size:12.5px;color:var(--paper);}
-  .filepath{font-family:var(--font-mono);font-size:12px;color:var(--paper-faint);word-break:break-all;}
+      /* ---------- agent cards ---------- */
+      .grid-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 18px;
+      }
+      details.card {
+        padding: 22px;
+        --fc: var(--cyan-dim);
+      }
+      details.card[data-role="hub"] {
+        --fc: var(--amber-dim);
+      }
+      details.card[data-role="gate"] {
+        --fc: var(--rose-dim);
+      }
+      details.card summary {
+        cursor: pointer;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      details.card summary::-webkit-details-marker {
+        display: none;
+      }
+      .card-id {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        color: var(--cyan);
+        border: 1px solid var(--cyan-dim);
+        padding: 2px 8px;
+      }
+      details.card[data-role="hub"] .card-id {
+        color: var(--amber);
+        border-color: var(--amber-dim);
+      }
+      details.card[data-role="gate"] .card-id {
+        color: var(--rose);
+        border-color: var(--rose-dim);
+      }
+      .card-name {
+        font-family: var(--font-display);
+        font-size: 17px;
+        margin-top: 10px;
+      }
+      .card-role {
+        color: var(--paper-dim);
+        font-size: 13px;
+        margin-top: 4px;
+      }
+      .chevron {
+        color: var(--paper-faint);
+        transition: transform 0.2s;
+        font-family: var(--font-mono);
+      }
+      details[open] .chevron {
+        transform: rotate(90deg);
+      }
+      .card-body {
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid var(--grid-dim);
+        font-size: 14px;
+        color: var(--paper-dim);
+      }
+      .card-body h5 {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--paper-faint);
+        margin: 14px 0 6px;
+      }
+      .card-body h5:first-child {
+        margin-top: 0;
+      }
+      .badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .badge {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        padding: 3px 8px;
+        border: 1px solid var(--grid);
+        color: var(--paper-dim);
+        background: var(--void-2);
+      }
+      .badge.skill {
+        border-color: var(--cyan-dim);
+        color: var(--cyan);
+      }
+      .card-body ul {
+        margin: 4px 0;
+        padding-inline-start: 18px;
+      }
+      .card-body code {
+        font-size: 12.5px;
+        color: var(--paper);
+      }
+      .filepath {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--paper-faint);
+        word-break: break-all;
+      }
 
-  /* ---------- tables ---------- */
-  table{width:100%;border-collapse:collapse;font-size:14px;}
-  thead th{
-    text-align:start;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;
-    color:var(--paper-faint);border-bottom:1px solid var(--grid);padding:10px 12px;
-  }
-  tbody td{padding:12px;border-bottom:1px solid var(--grid-dim);color:var(--paper-dim);vertical-align:top;}
-  tbody tr:hover td{background:rgba(255,255,255,.015);}
-  tbody td code{color:var(--cyan);}
-  .table-wrap{overflow-x:auto;}
-  table.compact td,table.compact th{padding:8px 10px;}
+      /* ---------- tables ---------- */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      thead th {
+        text-align: start;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--paper-faint);
+        border-bottom: 1px solid var(--grid);
+        padding: 10px 12px;
+      }
+      tbody td {
+        padding: 12px;
+        border-bottom: 1px solid var(--grid-dim);
+        color: var(--paper-dim);
+        vertical-align: top;
+      }
+      tbody tr:hover td {
+        background: rgba(255, 255, 255, 0.015);
+      }
+      tbody td code {
+        color: var(--cyan);
+      }
+      .table-wrap {
+        overflow-x: auto;
+      }
+      table.compact td,
+      table.compact th {
+        padding: 8px 10px;
+      }
 
-  /* ---------- folder tree ---------- */
-  pre.tree{
-    font-family:var(--font-mono);font-size:13px;line-height:1.75;color:var(--paper-dim);
-    padding:26px 28px;overflow-x:auto;margin:0;
-  }
-  pre.tree .dir{color:var(--amber);}
-  pre.tree .file{color:var(--paper);}
-  pre.tree .comment{color:var(--paper-faint);}
+      /* ---------- folder tree ---------- */
+      pre.tree {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        line-height: 1.75;
+        color: var(--paper-dim);
+        padding: 26px 28px;
+        overflow-x: auto;
+        margin: 0;
+      }
+      pre.tree .dir {
+        color: var(--amber);
+      }
+      pre.tree .file {
+        color: var(--paper);
+      }
+      pre.tree .comment {
+        color: var(--paper-faint);
+      }
 
-  /* ---------- two col ---------- */
-  .twocol{display:grid;grid-template-columns:1.1fr .9fr;gap:24px;}
-  @media (max-width:900px){.twocol{grid-template-columns:1fr;}}
+      /* ---------- two col ---------- */
+      .twocol {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 24px;
+      }
+      @media (max-width: 900px) {
+        .twocol {
+          grid-template-columns: 1fr;
+        }
+      }
 
-  /* ---------- walkthrough ---------- */
-  .flowlist{list-style:none;margin:0;padding:0;counter-reset:step;}
-  .flowlist li{
-    counter-increment:step;position:relative;padding:14px 0 14px 46px;
-    border-bottom:1px solid var(--grid-dim);font-size:14.5px;color:var(--paper-dim);
-  }
-  .flowlist li:last-child{border-bottom:none;}
-  .flowlist li::before{
-    content:counter(step);position:absolute;left:0;top:12px;
-    width:28px;height:28px;border:1px solid var(--amber-dim);color:var(--amber);
-    display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:12px;
-  }
-  .flowlist b{color:var(--paper);}
-  .flowlist code{color:var(--cyan);}
+      /* ---------- walkthrough ---------- */
+      .flowlist {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        counter-reset: step;
+      }
+      .flowlist li {
+        counter-increment: step;
+        position: relative;
+        padding: 14px 0 14px 46px;
+        border-bottom: 1px solid var(--grid-dim);
+        font-size: 14.5px;
+        color: var(--paper-dim);
+      }
+      .flowlist li:last-child {
+        border-bottom: none;
+      }
+      .flowlist li::before {
+        content: counter(step);
+        position: absolute;
+        left: 0;
+        top: 12px;
+        width: 28px;
+        height: 28px;
+        border: 1px solid var(--amber-dim);
+        color: var(--amber);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-mono);
+        font-size: 12px;
+      }
+      .flowlist b {
+        color: var(--paper);
+      }
+      .flowlist code {
+        color: var(--cyan);
+      }
 
-  /* ---------- install ---------- */
-  .install-card .cmd{
-    display:block;
-    margin-top:10px;
-    padding:12px 14px;
-    border:1px solid var(--grid);
-    background:var(--void-2);
-    color:var(--paper);
-    font-family:var(--font-mono);
-    font-size:13px;
-    overflow-x:auto;
-  }
-  .install-card-github .card-id{color:var(--amber);border-color:var(--amber-dim);}
-  .install-note{margin-top:12px;font-size:13px;color:var(--paper-faint);}
+      /* ---------- install ---------- */
+      .install-card .cmd {
+        display: block;
+        margin-top: 10px;
+        padding: 12px 14px;
+        border: 1px solid var(--grid);
+        background: var(--void-2);
+        color: var(--paper);
+        font-family: var(--font-mono);
+        font-size: 13px;
+        overflow-x: auto;
+      }
+      .install-card-github .card-id {
+        color: var(--amber);
+        border-color: var(--amber-dim);
+      }
+      .install-note {
+        margin-top: 12px;
+        font-size: 13px;
+        color: var(--paper-faint);
+      }
 
-  footer{padding:48px 0 80px;color:var(--paper-faint);font-size:13px;}
-  footer .wrap{border-top:1px solid var(--grid-dim);padding-top:28px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;}
-  footer code{color:var(--paper-dim);}
+      footer {
+        padding: 48px 0 80px;
+        color: var(--paper-faint);
+        font-size: 13px;
+      }
+      footer .wrap {
+        border-top: 1px solid var(--grid-dim);
+        padding-top: 28px;
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      footer code {
+        color: var(--paper-dim);
+      }
 
-  ::-webkit-scrollbar{height:10px;width:10px;}
-  ::-webkit-scrollbar-track{background:var(--void-2);}
-  ::-webkit-scrollbar-thumb{background:var(--grid);}
+      ::-webkit-scrollbar {
+        height: 10px;
+        width: 10px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--void-2);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--grid);
+      }
 
-  a:focus-visible, button:focus-visible, summary:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;}
+      a:focus-visible,
+      button:focus-visible,
+      summary:focus-visible {
+        outline: 2px solid var(--cyan);
+        outline-offset: 2px;
+      }
 
-  @media (prefers-reduced-motion: reduce){
-    *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;}
-  }
-</style>
-</head>
-<body>
-
-<div class="consolebar">
-  <div class="wrap">
-    <span><span class="dot"></span><b>STATUS</b> OPERATIONAL</span>
-    <span><b>AGENTS</b> 8</span>
-    <span><b>SKILLS</b> 9</span>
-    <span><b>MEMORY</b> file-based · append-only</span>
-    <span><b>ROOT</b> agents-arch/</span>
-    <span><b>DOC</b> help-docs/architecture.html</span>
-  </div>
-</div>
-
-<nav class="tabs">
-  <div class="wrap">
-    <a href="#install">Install</a>
-    <a href="#diagram">Diagram</a>
-    <a href="#workflow">Workflow</a>
-    <a href="#agents">Agents</a>
-    <a href="#skills">Skills</a>
-    <a href="#memory">Memory</a>
-    <a href="#foldermap">Folder Map</a>
-    <a href="#routing">Routing</a>
-    <a href="#walkthrough">Walkthrough</a>
-  </div>
-</nav>
-
-<header class="hero">
-  <div class="wrap">
-    <div class="hero-badge" aria-hidden="true">
-      <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" stroke-width="1"/><text x="50" y="57" text-anchor="middle" font-family="Cascadia Mono, monospace" font-size="22" fill="#f0a93e">★</text></svg>
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.001ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.001ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="consolebar">
+      <div class="wrap">
+        <span><span class="dot"></span><b>STATUS</b> OPERATIONAL</span>
+        <span><b>AGENTS</b> 9</span>
+        <span><b>SKILLS</b> 9</span>
+        <span><b>MEMORY</b> file-based · append-only</span>
+        <span><b>ROOT</b> agents-arch/</span>
+        <span><b>DOC</b> help-docs/architecture.html</span>
+      </div>
     </div>
-    <p class="eyebrow">Issta · Agent &amp; Skill Workspace</p>
-    <h1 class="title">Command <span class="accent">Deck</span></h1>
-    <p class="subtitle">A field map of how <b style="color:var(--paper)">Aluf⭐</b> commands seven specialist agents, nine skills, and a file-based memory system across the Issta codebase — for any developer picking up this workspace cold.</p>
-  </div>
-</header>
 
-<main class="wrap">
+    <nav class="tabs">
+      <div class="wrap">
+        <a href="#install">Install</a>
+        <a href="#diagram">Diagram</a>
+        <a href="#workflow">Workflow</a>
+        <a href="#agents">Agents</a>
+        <a href="#skills">Skills</a>
+        <a href="#memory">Memory</a>
+        <a href="#foldermap">Folder Map</a>
+        <a href="#routing">Routing</a>
+        <a href="#walkthrough">Walkthrough</a>
+      </div>
+    </nav>
 
-  <div class="callout reveal">
-    <b>What this actually is.</b> Nothing here executes on its own — there is no runtime, server, or scheduler. This workspace is a set of GitHub Copilot custom chat agent definitions (<code class="mono">*.agent.md</code> frontmatter files), skill references (<code class="mono">SKILL.md</code>), and a hand-written file-based memory system, all wired together by convention through <code class="mono">copilot-instructions.md</code>. Every arrow on this page is an instruction one markdown file gives an LLM to read another markdown file, or to invoke another agent by name — enforced entirely by the model choosing to follow the written rules, not by code.
-  </div>
+    <header class="hero">
+      <div class="wrap">
+        <div class="hero-badge" aria-hidden="true">
+          <svg viewBox="0 0 100 100">
+            <circle
+              cx="50"
+              cy="50"
+              r="46"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1"
+            />
+            <circle
+              cx="50"
+              cy="50"
+              r="30"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1"
+            />
+            <text
+              x="50"
+              y="57"
+              text-anchor="middle"
+              font-family="Cascadia Mono, monospace"
+              font-size="22"
+              fill="#f0a93e"
+            >
+              ★
+            </text>
+          </svg>
+        </div>
+        <p class="eyebrow">Issta · Agent &amp; Skill Workspace</p>
+        <h1 class="title">Command <span class="accent">Deck</span></h1>
+        <p class="subtitle">
+          A field map of how <b style="color: var(--paper)">Aluf⭐</b> commands
+          eight specialist agents, nine skills, and a file-based memory system
+          across the Issta codebase — with lifecycle hooks enforcing every step
+          transition. Built for any developer picking up this workspace cold.
+        </p>
+      </div>
+    </header>
 
-  <!-- ============ INSTALL ============ -->
-  <section id="install">
-    <div class="section-head"><span class="section-num">00</span><h2 class="section-title">Install Instructions</h2></div>
-    <p class="section-lede">Use the shared installer to copy this workspace into <code class="mono">~/.copilot</code>. It adds missing files only and leaves existing files in place.</p>
+    <main class="wrap">
+      <div class="callout reveal">
+        <b>What this actually is.</b> Nothing here executes on its own — there
+        is no runtime, server, or scheduler. This workspace is a set of GitHub
+        Copilot custom chat agent definitions (<code class="mono"
+          >*.agent.md</code
+        >
+        frontmatter files), skill references (<code class="mono">SKILL.md</code
+        >), and a hand-written file-based memory system, all wired together by
+        convention through <code class="mono">copilot-instructions.md</code>.
+        Every arrow on this page is an instruction one markdown file gives an
+        LLM to read another markdown file, or to invoke another agent by name —
+        enforced entirely by the model choosing to follow the written rules, not
+        by code.
+      </div>
 
-    <div class="callout amber reveal">
-      <b>Use one of the exact commands below.</b> Do not try command shapes like <code class="mono">npx install something</code>; <code class="mono">npx</code> runs a package executable.
-    </div>
+      <!-- ============ INSTALL ============ -->
+      <section id="install">
+        <div class="section-head">
+          <span class="section-num">00</span>
+          <h2 class="section-title">Install Instructions</h2>
+        </div>
+        <p class="section-lede">
+          Use the shared installer to copy this workspace into
+          <code class="mono">~/.copilot</code>. It
+          <b style="color: var(--paper)">always overwrites</b> existing files so
+          you get the latest version on every run.
+        </p>
 
-    <div class="grid-cards reveal">
-      <details class="card hud amber install-card install-card-github" open>
-        <summary>
-          <div>
-            <span class="card-id">GitHub</span>
-            <div class="card-name">Install directly from GitHub</div>
-            <div class="card-role">Uses the repository name, not the npm package name.</div>
+        <div class="callout amber reveal">
+          <b>Use one of the exact commands below.</b> Do not try command shapes
+          like <code class="mono">npx install something</code>;
+          <code class="mono">npx</code> runs a package executable.
+        </div>
+
+        <div class="grid-cards reveal">
+          <details class="card hud amber install-card install-card-github" open>
+            <summary>
+              <div>
+                <span class="card-id">GitHub</span>
+                <div class="card-name">Install directly from GitHub</div>
+                <div class="card-role">
+                  Uses the repository name, not the npm package name.
+                </div>
+              </div>
+              <span class="chevron">›</span>
+            </summary>
+            <div class="card-body">
+              <code class="cmd"
+                >npx github:giladme-issta/Issta-agents-package</code
+              >
+              <p class="install-note">
+                Always writes the latest files — existing files are overwritten.
+                Re-run any time the package is updated to pull the latest
+                agents, skills, and memory definitions.
+              </p>
+            </div>
+          </details>
+
+          <details class="card hud install-card" open>
+            <summary>
+              <div>
+                <span class="card-id">npm</span>
+                <div class="card-name">Install from the published package</div>
+                <div class="card-role">
+                  Use this after the package has been published.
+                </div>
+              </div>
+              <span class="chevron">›</span>
+            </summary>
+            <div class="card-body">
+              <code class="cmd">npx issta-copilot-setup</code>
+              <p class="install-note">
+                Installed workspace contents: <code>agents/</code>,
+                <code>skills/</code>, <code>memory/</code>,
+                <code>help-docs/</code>, and
+                <code>copilot-instructions.md</code>.
+              </p>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <!-- ============ DIAGRAM ============ -->
+      <section id="diagram">
+        <div class="section-head">
+          <span class="section-num">01</span>
+          <h2 class="section-title">Orchestration Map</h2>
+        </div>
+        <p class="section-lede">
+          Click any node — agent, skill, or memory file — to trace its
+          connections. Everything else dims. The three concentric rings are
+          real: the inner ring is Aluf's direct reports, the outer ring is the
+          skill layer every agent draws from.
+        </p>
+
+        <div class="hud diagram-panel reveal">
+          <div class="legend">
+            <span
+              ><span class="swatch amberline"></span>Orchestration arc (Aluf⭐ ↔
+              agent), pulse = active delegation</span
+            >
+            <span
+              ><span class="swatch dashline"></span>Peer sub-delegation (agent →
+              agent, no Aluf involved)</span
+            >
+            <span
+              ><span class="swatch dotline"></span>“requires skill”
+              dependency</span
+            >
+            <span><span class="dot-sw node-amber"></span>Orchestrator</span>
+            <span><span class="dot-sw node-cyan"></span>Specialist agent</span>
+            <span><span class="dot-sw node-rose"></span>Quality gate</span>
           </div>
-          <span class="chevron">›</span>
-        </summary>
-        <div class="card-body">
-          <code class="cmd">npx github:giladme-issta/Issta-agents-package</code>
-        </div>
-      </details>
 
-      <details class="card hud install-card" open>
-        <summary>
-          <div>
-            <span class="card-id">npm</span>
-            <div class="card-name">Install from the published package</div>
-            <div class="card-role">Use this after the package has been published.</div>
+          <div class="diagram-scroll">
+            <svg
+              id="orgsvg"
+              viewBox="0 0 1180 900"
+              role="img"
+              aria-label="Agent orchestration diagram"
+            >
+              <defs>
+                <filter
+                  id="glowAmber"
+                  x="-60%"
+                  y="-60%"
+                  width="220%"
+                  height="220%"
+                >
+                  <feDropShadow
+                    dx="0"
+                    dy="0"
+                    stdDeviation="3.2"
+                    flood-color="#f0a93e"
+                    flood-opacity="0.95"
+                  />
+                </filter>
+                <filter
+                  id="glowCyan"
+                  x="-60%"
+                  y="-60%"
+                  width="220%"
+                  height="220%"
+                >
+                  <feDropShadow
+                    dx="0"
+                    dy="0"
+                    stdDeviation="3.2"
+                    flood-color="#4fd5e0"
+                    flood-opacity="0.95"
+                  />
+                </filter>
+                <filter
+                  id="glowRose"
+                  x="-60%"
+                  y="-60%"
+                  width="220%"
+                  height="220%"
+                >
+                  <feDropShadow
+                    dx="0"
+                    dy="0"
+                    stdDeviation="3.2"
+                    flood-color="#e8556b"
+                    flood-opacity="0.95"
+                  />
+                </filter>
+              </defs>
+
+              <!-- radar rings (structural, not decorative: r=280 = agent ring, r=380 = skill ring) -->
+              <circle class="ring" cx="600" cy="450" r="140" />
+              <circle class="ring" cx="600" cy="450" r="280" />
+              <circle class="ring" cx="600" cy="450" r="380" />
+              <line class="cross" x1="600" y1="20" x2="600" y2="880" />
+              <line class="cross" x1="70" y1="450" x2="1130" y2="450" />
+
+              <!-- skill dependency lines (behind everything) -->
+              <g id="skilllines">
+                <line
+                  class="skillline"
+                  data-skill="issta-stack"
+                  data-agent="hotel-2017"
+                  x1="600"
+                  y1="70"
+                  x2="600"
+                  y2="170"
+                />
+                <line
+                  class="skillline"
+                  data-skill="issta-stack"
+                  data-agent="hotel-v5"
+                  x1="600"
+                  y1="70"
+                  x2="819"
+                  y2="275"
+                />
+                <line
+                  class="skillline"
+                  data-skill="issta-stack"
+                  data-agent="webagent-server"
+                  x1="600"
+                  y1="70"
+                  x2="873"
+                  y2="512"
+                />
+                <line
+                  class="skillline"
+                  data-skill="issta-stack"
+                  data-agent="webagent-client"
+                  x1="600"
+                  y1="70"
+                  x2="722"
+                  y2="702"
+                />
+                <line
+                  class="skillline"
+                  data-skill="issta-stack"
+                  data-agent="search-engine"
+                  x1="600"
+                  y1="70"
+                  x2="478"
+                  y2="702"
+                />
+                <line
+                  class="skillline"
+                  data-skill="issta-stack"
+                  data-agent="code-reviewer"
+                  x1="600"
+                  y1="70"
+                  x2="327"
+                  y2="512"
+                />
+
+                <line
+                  class="skillline"
+                  data-skill="angular-patterns"
+                  data-agent="search-engine"
+                  x1="844"
+                  y1="159"
+                  x2="478"
+                  y2="702"
+                />
+                <line
+                  class="skillline"
+                  data-skill="angular-patterns"
+                  data-agent="webagent-client"
+                  x1="844"
+                  y1="159"
+                  x2="722"
+                  y2="702"
+                />
+
+                <line
+                  class="skillline"
+                  data-skill="dotnet-clean-arch"
+                  data-agent="webagent-server"
+                  x1="974"
+                  y1="384"
+                  x2="873"
+                  y2="512"
+                />
+                <line
+                  class="skillline"
+                  data-skill="dotnet-clean-arch"
+                  data-agent="hotel-v5"
+                  x1="974"
+                  y1="384"
+                  x2="819"
+                  y2="275"
+                />
+
+                <line
+                  class="skillline"
+                  data-skill="owasp-security"
+                  data-agent="code-reviewer"
+                  x1="929"
+                  y1="640"
+                  x2="327"
+                  y2="512"
+                />
+
+                <line
+                  class="skillline"
+                  data-skill="gtm-ga4-tracking"
+                  data-agent="hotel-2017"
+                  x1="730"
+                  y1="807"
+                  x2="600"
+                  y2="170"
+                />
+                <line
+                  class="skillline"
+                  data-skill="gtm-ga4-tracking"
+                  data-agent="webagent-client"
+                  x1="730"
+                  y1="807"
+                  x2="722"
+                  y2="702"
+                />
+
+                <line
+                  class="skillline"
+                  data-skill="gimmonix-adapter"
+                  data-agent="hotel-v5"
+                  x1="470"
+                  y1="807"
+                  x2="819"
+                  y2="275"
+                />
+
+                <line
+                  class="skillline"
+                  data-skill="memory-structure"
+                  data-agent="memory-agent"
+                  x1="271"
+                  y1="640"
+                  x2="381"
+                  y2="275"
+                />
+
+                <line
+                  class="skillline"
+                  data-skill="rating-skill"
+                  data-agent="rating-agent"
+                  x1="226"
+                  y1="384"
+                  x2="330"
+                  y2="378"
+                />
+                <line
+                  class="skillline"
+                  data-skill="skill-route"
+                  data-agent="aluf"
+                  x1="356"
+                  y1="159"
+                  x2="600"
+                  y2="450"
+                />
+              </g>
+
+              <!-- memory satellite lines -->
+              <g id="memlines">
+                <line
+                  class="memline"
+                  data-agent="memory-agent"
+                  data-mem="mem-index"
+                  x1="381"
+                  y1="275"
+                  x2="110"
+                  y2="330"
+                />
+                <line
+                  class="memline"
+                  data-agent="memory-agent"
+                  data-mem="mem-domains"
+                  x1="381"
+                  y1="275"
+                  x2="90"
+                  y2="440"
+                />
+                <line
+                  class="memline"
+                  data-agent="memory-agent"
+                  data-mem="mem-entries"
+                  x1="381"
+                  y1="275"
+                  x2="110"
+                  y2="550"
+                />
+                <line
+                  class="memline"
+                  data-agent="memory-agent"
+                  data-mem="mem-ledger"
+                  x1="381"
+                  y1="275"
+                  x2="170"
+                  y2="640"
+                />
+              </g>
+
+              <!-- orchestration arcs -->
+              <g id="arcs">
+                <path
+                  id="arc-hotel-2017"
+                  class="arc"
+                  data-agent="hotel-2017"
+                  d="M600,450 Q565,310 600,170"
+                />
+                <path
+                  id="arc-hotel-v5"
+                  class="arc"
+                  data-agent="hotel-v5"
+                  d="M600,450 Q688,335 819,275"
+                />
+                <path
+                  id="arc-webagent-server"
+                  class="arc"
+                  data-agent="webagent-server"
+                  d="M600,450 Q744,447 873,512"
+                />
+                <path
+                  id="arc-webagent-client"
+                  class="arc"
+                  data-agent="webagent-client"
+                  d="M600,450 Q693,561 722,702"
+                />
+                <path
+                  id="arc-search-engine"
+                  class="arc"
+                  data-agent="search-engine"
+                  d="M600,450 Q571,591 478,702"
+                />
+                <path
+                  id="arc-code-reviewer"
+                  class="arc"
+                  data-agent="code-reviewer"
+                  d="M600,450 Q471,515 327,512"
+                />
+                <path
+                  id="arc-memory-agent"
+                  class="arc"
+                  data-agent="memory-agent"
+                  d="M600,450 Q469,390 381,275"
+                />
+                <path
+                  id="arc-rating-agent"
+                  class="arc"
+                  data-agent="rating-agent"
+                  d="M600,450 Q465,414 330,378"
+                />
+                <path
+                  id="arc-rating-to-mem"
+                  class="arc dashed"
+                  data-agent="rating-agent"
+                  data-agent2="memory-agent"
+                  d="M330,378 Q355,327 381,275"
+                />
+                <path
+                  id="arc-subdelegate"
+                  class="arc dashed"
+                  data-agent="webagent-client"
+                  data-agent2="search-engine"
+                  d="M722,702 Q600,760 478,702"
+                />
+              </g>
+
+              <!-- pulses -->
+              <g id="pulses">
+                <circle r="4" class="pulse" fill="var(--amber)">
+                  <animateMotion dur="3.4s" repeatCount="indefinite">
+                    <mpath href="#arc-hotel-2017" />
+                  </animateMotion>
+                </circle>
+                <circle r="4" class="pulse" fill="var(--amber)">
+                  <animateMotion dur="3.8s" repeatCount="indefinite">
+                    <mpath href="#arc-hotel-v5" />
+                  </animateMotion>
+                </circle>
+                <circle r="4" class="pulse" fill="var(--amber)">
+                  <animateMotion dur="3.1s" repeatCount="indefinite">
+                    <mpath href="#arc-webagent-server" />
+                  </animateMotion>
+                </circle>
+                <circle r="4" class="pulse" fill="var(--amber)">
+                  <animateMotion dur="3.6s" repeatCount="indefinite">
+                    <mpath href="#arc-webagent-client" />
+                  </animateMotion>
+                </circle>
+                <circle r="4" class="pulse" fill="var(--amber)">
+                  <animateMotion dur="3.3s" repeatCount="indefinite">
+                    <mpath href="#arc-search-engine" />
+                  </animateMotion>
+                </circle>
+                <circle r="4" class="pulse" fill="var(--rose)">
+                  <animateMotion dur="2.6s" repeatCount="indefinite">
+                    <mpath href="#arc-code-reviewer" />
+                  </animateMotion>
+                </circle>
+                <circle r="4" class="pulse" fill="var(--amber)">
+                  <animateMotion dur="4.1s" repeatCount="indefinite">
+                    <mpath href="#arc-memory-agent" />
+                  </animateMotion>
+                </circle>
+                <circle r="4" class="pulse" fill="var(--rose)">
+                  <animateMotion dur="3.2s" repeatCount="indefinite">
+                    <mpath href="#arc-rating-agent" />
+                  </animateMotion>
+                </circle>
+                <circle r="3" class="pulse" fill="var(--amber)">
+                  <animateMotion dur="2.8s" repeatCount="indefinite">
+                    <mpath href="#arc-rating-to-mem" />
+                  </animateMotion>
+                </circle>
+                <circle r="3" class="pulse" fill="var(--rose)">
+                  <animateMotion dur="2.9s" repeatCount="indefinite">
+                    <mpath href="#arc-subdelegate" />
+                  </animateMotion>
+                </circle>
+              </g>
+
+              <!-- memory satellite nodes -->
+              <g id="memnodes">
+                <g class="memnode-g" data-mem="mem-index">
+                  <rect
+                    class="memnode"
+                    x="98"
+                    y="316"
+                    width="24"
+                    height="28"
+                    rx="1"
+                  />
+                  <text class="memlabel" x="110" y="356">index.md</text>
+                </g>
+                <g class="memnode-g" data-mem="mem-domains">
+                  <rect
+                    class="memnode"
+                    x="78"
+                    y="426"
+                    width="24"
+                    height="28"
+                    rx="1"
+                  />
+                  <text class="memlabel" x="90" y="466">domains/</text>
+                </g>
+                <g class="memnode-g" data-mem="mem-entries">
+                  <rect
+                    class="memnode"
+                    x="98"
+                    y="536"
+                    width="24"
+                    height="28"
+                    rx="1"
+                  />
+                  <text class="memlabel" x="110" y="576">entries/</text>
+                </g>
+                <g class="memnode-g" data-mem="mem-ledger">
+                  <rect
+                    class="memnode"
+                    x="158"
+                    y="626"
+                    width="24"
+                    height="28"
+                    rx="1"
+                  />
+                  <text class="memlabel" x="170" y="666">
+                    agent-performance.md
+                  </text>
+                </g>
+              </g>
+
+              <!-- skill nodes -->
+              <g id="skillnodes">
+                <g class="skillnode-g" data-skill="issta-stack">
+                  <circle class="skillnode" cx="600" cy="70" r="9" />
+                  <text class="skilllabel" x="600" y="52">issta-stack</text>
+                </g>
+                <g class="skillnode-g" data-skill="angular-patterns">
+                  <circle class="skillnode" cx="844" cy="159" r="9" />
+                  <text class="skilllabel" x="844" y="141">
+                    angular-patterns
+                  </text>
+                </g>
+                <g class="skillnode-g" data-skill="dotnet-clean-arch">
+                  <circle class="skillnode" cx="974" cy="384" r="9" />
+                  <text class="skilllabel" x="1010" y="380">
+                    dotnet-clean-arch
+                  </text>
+                </g>
+                <g class="skillnode-g" data-skill="owasp-security">
+                  <circle class="skillnode" cx="929" cy="640" r="9" />
+                  <text class="skilllabel" x="965" y="644">owasp-security</text>
+                </g>
+                <g class="skillnode-g" data-skill="gtm-ga4-tracking">
+                  <circle class="skillnode" cx="730" cy="807" r="9" />
+                  <text class="skilllabel" x="730" y="830">
+                    gtm-ga4-tracking
+                  </text>
+                </g>
+                <g class="skillnode-g" data-skill="gimmonix-adapter">
+                  <circle class="skillnode" cx="470" cy="807" r="9" />
+                  <text class="skilllabel" x="470" y="830">
+                    gimmonix-adapter
+                  </text>
+                </g>
+                <g class="skillnode-g" data-skill="memory-structure">
+                  <circle class="skillnode" cx="271" cy="640" r="9" />
+                  <text class="skilllabel" x="235" y="644">
+                    memory-structure
+                  </text>
+                </g>
+                <g class="skillnode-g" data-skill="rating-skill">
+                  <circle class="skillnode" cx="226" cy="384" r="9" />
+                  <text class="skilllabel" x="190" y="380">rating-skill</text>
+                </g>
+                <g class="skillnode-g" data-skill="skill-route">
+                  <circle class="skillnode" cx="356" cy="159" r="9" />
+                  <text class="skilllabel" x="356" y="141">skill-route</text>
+                </g>
+              </g>
+
+              <!-- agent nodes -->
+              <g id="agentnodes">
+                <g
+                  class="node agent"
+                  tabindex="0"
+                  role="button"
+                  data-id="hotel-2017"
+                  data-card="card-hotel-2017"
+                  transform="translate(600,170)"
+                >
+                  <circle class="ring-outer" r="34" />
+                  <text class="callsign" y="5">H17</text>
+                  <text class="nodelabel" y="52">Hotel-Expert-2017</text>
+                </g>
+                <g
+                  class="node agent"
+                  tabindex="0"
+                  role="button"
+                  data-id="hotel-v5"
+                  data-card="card-hotel-v5"
+                  transform="translate(819,275)"
+                >
+                  <circle class="ring-outer" r="34" />
+                  <text class="callsign" y="5">HV5</text>
+                  <text class="nodelabel" y="52">Hotel-Expert-V5</text>
+                </g>
+                <g
+                  class="node agent"
+                  tabindex="0"
+                  role="button"
+                  data-id="webagent-server"
+                  data-card="card-webagent-server"
+                  transform="translate(873,512)"
+                >
+                  <circle class="ring-outer" r="34" />
+                  <text class="callsign" y="5">WHS</text>
+                  <text class="nodelabel" y="52">WebAgent-Hotel-Server</text>
+                </g>
+                <g
+                  class="node agent"
+                  tabindex="0"
+                  role="button"
+                  data-id="webagent-client"
+                  data-card="card-webagent-client"
+                  transform="translate(722,702)"
+                >
+                  <circle class="ring-outer" r="34" />
+                  <text class="callsign" y="5">WHC</text>
+                  <text class="nodelabel" y="52">WebAgent-Hotel-Client</text>
+                </g>
+                <g
+                  class="node agent"
+                  tabindex="0"
+                  role="button"
+                  data-id="search-engine"
+                  data-card="card-search-engine"
+                  transform="translate(478,702)"
+                >
+                  <circle class="ring-outer" r="34" />
+                  <text class="callsign" y="5">ENG</text>
+                  <text class="nodelabel" y="52">Search Engine Expert</text>
+                </g>
+                <g
+                  class="node gate"
+                  tabindex="0"
+                  role="button"
+                  data-id="code-reviewer"
+                  data-card="card-code-reviewer"
+                  transform="translate(327,512)"
+                >
+                  <circle class="ring-outer" r="34" />
+                  <text class="callsign" y="5">REV</text>
+                  <text class="nodelabel" y="52">Code-Reviewer</text>
+                </g>
+                <g
+                  class="node gate"
+                  tabindex="0"
+                  role="button"
+                  data-id="rating-agent"
+                  data-card="card-rating-agent"
+                  transform="translate(330,378)"
+                >
+                  <circle class="ring-outer" r="34" />
+                  <text class="callsign" y="5">RTG</text>
+                  <text class="nodelabel" y="52">Rating-Agent</text>
+                </g>
+                <g
+                  class="node mem"
+                  tabindex="0"
+                  role="button"
+                  data-id="memory-agent"
+                  data-card="card-memory-agent"
+                  transform="translate(381,275)"
+                >
+                  <circle class="ring-outer" r="34" />
+                  <text class="callsign" y="5">MEM</text>
+                  <text class="nodelabel" y="52">Memory-Agent</text>
+                </g>
+                <g
+                  class="node hub"
+                  tabindex="0"
+                  role="button"
+                  data-id="aluf"
+                  data-card="card-aluf"
+                  transform="translate(600,450)"
+                >
+                  <circle class="ring-outer" r="46" />
+                  <text class="callsign" y="6" style="font-size: 17px">
+                    ALF ★
+                  </text>
+                  <text class="nodelabel" y="66">Aluf⭐ — Orchestrator</text>
+                </g>
+              </g>
+            </svg>
           </div>
-          <span class="chevron">›</span>
-        </summary>
-        <div class="card-body">
-          <code class="cmd">npx issta-copilot-setup</code>
-          <p class="install-note">Installed workspace contents: <code>agents/</code>, <code>skills/</code>, <code>memory/</code>, <code>help-docs/</code>, and <code>copilot-instructions.md</code>.</p>
+
+          <div class="diagram-foot">
+            <span id="focusreadout"
+              >FOCUS: none — click a node to trace it</span
+            >
+            <button id="clearfocus" type="button">Clear focus</button>
+          </div>
         </div>
-      </details>
-    </div>
-  </section>
+      </section>
 
-  <!-- ============ DIAGRAM ============ -->
-  <section id="diagram">
-    <div class="section-head"><span class="section-num">01</span><h2 class="section-title">Orchestration Map</h2></div>
-    <p class="section-lede">Click any node — agent, skill, or memory file — to trace its connections. Everything else dims. The three concentric rings are real: the inner ring is Aluf's direct reports, the outer ring is the skill layer every agent draws from.</p>
-
-    <div class="hud diagram-panel reveal">
-      <div class="legend">
-        <span><span class="swatch amberline"></span>Orchestration arc (Aluf⭐ ↔ agent), pulse = active delegation</span>
-        <span><span class="swatch dashline"></span>Peer sub-delegation (agent → agent, no Aluf involved)</span>
-        <span><span class="swatch dotline"></span>“requires skill” dependency</span>
-        <span><span class="dot-sw node-amber"></span>Orchestrator</span>
-        <span><span class="dot-sw node-cyan"></span>Specialist agent</span>
-        <span><span class="dot-sw node-rose"></span>Quality gate</span>
-      </div>
-
-      <div class="diagram-scroll">
-        <svg id="orgsvg" viewBox="0 0 1180 900" role="img" aria-label="Agent orchestration diagram">
-          <defs>
-            <filter id="glowAmber" x="-60%" y="-60%" width="220%" height="220%"><feDropShadow dx="0" dy="0" stdDeviation="3.2" flood-color="#f0a93e" flood-opacity="0.95"/></filter>
-            <filter id="glowCyan" x="-60%" y="-60%" width="220%" height="220%"><feDropShadow dx="0" dy="0" stdDeviation="3.2" flood-color="#4fd5e0" flood-opacity="0.95"/></filter>
-            <filter id="glowRose" x="-60%" y="-60%" width="220%" height="220%"><feDropShadow dx="0" dy="0" stdDeviation="3.2" flood-color="#e8556b" flood-opacity="0.95"/></filter>
-          </defs>
-
-          <!-- radar rings (structural, not decorative: r=280 = agent ring, r=380 = skill ring) -->
-          <circle class="ring" cx="600" cy="450" r="140"/>
-          <circle class="ring" cx="600" cy="450" r="280"/>
-          <circle class="ring" cx="600" cy="450" r="380"/>
-          <line class="cross" x1="600" y1="20" x2="600" y2="880"/>
-          <line class="cross" x1="70" y1="450" x2="1130" y2="450"/>
-
-          <!-- skill dependency lines (behind everything) -->
-          <g id="skilllines">
-            <line class="skillline" data-skill="issta-stack" data-agent="hotel-2017" x1="600" y1="70" x2="600" y2="170"/>
-            <line class="skillline" data-skill="issta-stack" data-agent="hotel-v5" x1="600" y1="70" x2="819" y2="275"/>
-            <line class="skillline" data-skill="issta-stack" data-agent="webagent-server" x1="600" y1="70" x2="873" y2="512"/>
-            <line class="skillline" data-skill="issta-stack" data-agent="webagent-client" x1="600" y1="70" x2="722" y2="702"/>
-            <line class="skillline" data-skill="issta-stack" data-agent="search-engine" x1="600" y1="70" x2="478" y2="702"/>
-            <line class="skillline" data-skill="issta-stack" data-agent="code-reviewer" x1="600" y1="70" x2="327" y2="512"/>
-
-            <line class="skillline" data-skill="angular-patterns" data-agent="search-engine" x1="844" y1="159" x2="478" y2="702"/>
-            <line class="skillline" data-skill="angular-patterns" data-agent="webagent-client" x1="844" y1="159" x2="722" y2="702"/>
-
-            <line class="skillline" data-skill="dotnet-clean-arch" data-agent="webagent-server" x1="974" y1="384" x2="873" y2="512"/>
-            <line class="skillline" data-skill="dotnet-clean-arch" data-agent="hotel-v5" x1="974" y1="384" x2="819" y2="275"/>
-
-            <line class="skillline" data-skill="owasp-security" data-agent="code-reviewer" x1="929" y1="640" x2="327" y2="512"/>
-
-            <line class="skillline" data-skill="gtm-ga4-tracking" data-agent="hotel-2017" x1="730" y1="807" x2="600" y2="170"/>
-            <line class="skillline" data-skill="gtm-ga4-tracking" data-agent="webagent-client" x1="730" y1="807" x2="722" y2="702"/>
-
-            <line class="skillline" data-skill="gimmonix-adapter" data-agent="hotel-v5" x1="470" y1="807" x2="819" y2="275"/>
-
-            <line class="skillline" data-skill="memory-structure" data-agent="memory-agent" x1="271" y1="640" x2="381" y2="275"/>
-
-            <line class="skillline" data-skill="rating-skill" data-agent="aluf" x1="226" y1="384" x2="600" y2="450"/>
-            <line class="skillline" data-skill="skill-route" data-agent="aluf" x1="356" y1="159" x2="600" y2="450"/>
-          </g>
-
-          <!-- memory satellite lines -->
-          <g id="memlines">
-            <line class="memline" data-agent="memory-agent" data-mem="mem-index" x1="381" y1="275" x2="110" y2="330"/>
-            <line class="memline" data-agent="memory-agent" data-mem="mem-domains" x1="381" y1="275" x2="90" y2="440"/>
-            <line class="memline" data-agent="memory-agent" data-mem="mem-entries" x1="381" y1="275" x2="110" y2="550"/>
-            <line class="memline" data-agent="memory-agent" data-mem="mem-ledger" x1="381" y1="275" x2="170" y2="640"/>
-          </g>
-
-          <!-- orchestration arcs -->
-          <g id="arcs">
-            <path id="arc-hotel-2017" class="arc" data-agent="hotel-2017" d="M600,450 Q565,310 600,170"/>
-            <path id="arc-hotel-v5" class="arc" data-agent="hotel-v5" d="M600,450 Q688,335 819,275"/>
-            <path id="arc-webagent-server" class="arc" data-agent="webagent-server" d="M600,450 Q744,447 873,512"/>
-            <path id="arc-webagent-client" class="arc" data-agent="webagent-client" d="M600,450 Q693,561 722,702"/>
-            <path id="arc-search-engine" class="arc" data-agent="search-engine" d="M600,450 Q571,591 478,702"/>
-            <path id="arc-code-reviewer" class="arc" data-agent="code-reviewer" d="M600,450 Q471,515 327,512"/>
-            <path id="arc-memory-agent" class="arc" data-agent="memory-agent" d="M600,450 Q469,390 381,275"/>
-            <path id="arc-subdelegate" class="arc dashed" data-agent="webagent-client" data-agent2="search-engine" d="M722,702 Q600,760 478,702"/>
-          </g>
-
-          <!-- pulses -->
-          <g id="pulses">
-            <circle r="4" class="pulse" fill="var(--amber)"><animateMotion dur="3.4s" repeatCount="indefinite"><mpath href="#arc-hotel-2017"/></animateMotion></circle>
-            <circle r="4" class="pulse" fill="var(--amber)"><animateMotion dur="3.8s" repeatCount="indefinite"><mpath href="#arc-hotel-v5"/></animateMotion></circle>
-            <circle r="4" class="pulse" fill="var(--amber)"><animateMotion dur="3.1s" repeatCount="indefinite"><mpath href="#arc-webagent-server"/></animateMotion></circle>
-            <circle r="4" class="pulse" fill="var(--amber)"><animateMotion dur="3.6s" repeatCount="indefinite"><mpath href="#arc-webagent-client"/></animateMotion></circle>
-            <circle r="4" class="pulse" fill="var(--amber)"><animateMotion dur="3.3s" repeatCount="indefinite"><mpath href="#arc-search-engine"/></animateMotion></circle>
-            <circle r="4" class="pulse" fill="var(--rose)"><animateMotion dur="2.6s" repeatCount="indefinite"><mpath href="#arc-code-reviewer"/></animateMotion></circle>
-            <circle r="4" class="pulse" fill="var(--amber)"><animateMotion dur="4.1s" repeatCount="indefinite"><mpath href="#arc-memory-agent"/></animateMotion></circle>
-            <circle r="3" class="pulse" fill="var(--rose)"><animateMotion dur="2.9s" repeatCount="indefinite"><mpath href="#arc-subdelegate"/></animateMotion></circle>
-          </g>
-
-          <!-- memory satellite nodes -->
-          <g id="memnodes">
-            <g class="memnode-g" data-mem="mem-index">
-              <rect class="memnode" x="98" y="316" width="24" height="28" rx="1"/>
-              <text class="memlabel" x="110" y="356">index.md</text>
-            </g>
-            <g class="memnode-g" data-mem="mem-domains">
-              <rect class="memnode" x="78" y="426" width="24" height="28" rx="1"/>
-              <text class="memlabel" x="90" y="466">domains/</text>
-            </g>
-            <g class="memnode-g" data-mem="mem-entries">
-              <rect class="memnode" x="98" y="536" width="24" height="28" rx="1"/>
-              <text class="memlabel" x="110" y="576">entries/</text>
-            </g>
-            <g class="memnode-g" data-mem="mem-ledger">
-              <rect class="memnode" x="158" y="626" width="24" height="28" rx="1"/>
-              <text class="memlabel" x="170" y="666">agent-performance.md</text>
-            </g>
-          </g>
-
-          <!-- skill nodes -->
-          <g id="skillnodes">
-            <g class="skillnode-g" data-skill="issta-stack"><circle class="skillnode" cx="600" cy="70" r="9"/><text class="skilllabel" x="600" y="52">issta-stack</text></g>
-            <g class="skillnode-g" data-skill="angular-patterns"><circle class="skillnode" cx="844" cy="159" r="9"/><text class="skilllabel" x="844" y="141">angular-patterns</text></g>
-            <g class="skillnode-g" data-skill="dotnet-clean-arch"><circle class="skillnode" cx="974" cy="384" r="9"/><text class="skilllabel" x="1010" y="380">dotnet-clean-arch</text></g>
-            <g class="skillnode-g" data-skill="owasp-security"><circle class="skillnode" cx="929" cy="640" r="9"/><text class="skilllabel" x="965" y="644">owasp-security</text></g>
-            <g class="skillnode-g" data-skill="gtm-ga4-tracking"><circle class="skillnode" cx="730" cy="807" r="9"/><text class="skilllabel" x="730" y="830">gtm-ga4-tracking</text></g>
-            <g class="skillnode-g" data-skill="gimmonix-adapter"><circle class="skillnode" cx="470" cy="807" r="9"/><text class="skilllabel" x="470" y="830">gimmonix-adapter</text></g>
-            <g class="skillnode-g" data-skill="memory-structure"><circle class="skillnode" cx="271" cy="640" r="9"/><text class="skilllabel" x="235" y="644">memory-structure</text></g>
-            <g class="skillnode-g" data-skill="rating-skill"><circle class="skillnode" cx="226" cy="384" r="9"/><text class="skilllabel" x="190" y="380">rating-skill</text></g>
-            <g class="skillnode-g" data-skill="skill-route"><circle class="skillnode" cx="356" cy="159" r="9"/><text class="skilllabel" x="356" y="141">skill-route</text></g>
-          </g>
-
-          <!-- agent nodes -->
-          <g id="agentnodes">
-            <g class="node agent" tabindex="0" role="button" data-id="hotel-2017" data-card="card-hotel-2017" transform="translate(600,170)">
-              <circle class="ring-outer" r="34"/><text class="callsign" y="5">H17</text><text class="nodelabel" y="52">Hotel-Expert-2017</text>
-            </g>
-            <g class="node agent" tabindex="0" role="button" data-id="hotel-v5" data-card="card-hotel-v5" transform="translate(819,275)">
-              <circle class="ring-outer" r="34"/><text class="callsign" y="5">HV5</text><text class="nodelabel" y="52">Hotel-Expert-V5</text>
-            </g>
-            <g class="node agent" tabindex="0" role="button" data-id="webagent-server" data-card="card-webagent-server" transform="translate(873,512)">
-              <circle class="ring-outer" r="34"/><text class="callsign" y="5">WHS</text><text class="nodelabel" y="52">WebAgent-Hotel-Server</text>
-            </g>
-            <g class="node agent" tabindex="0" role="button" data-id="webagent-client" data-card="card-webagent-client" transform="translate(722,702)">
-              <circle class="ring-outer" r="34"/><text class="callsign" y="5">WHC</text><text class="nodelabel" y="52">WebAgent-Hotel-Client</text>
-            </g>
-            <g class="node agent" tabindex="0" role="button" data-id="search-engine" data-card="card-search-engine" transform="translate(478,702)">
-              <circle class="ring-outer" r="34"/><text class="callsign" y="5">ENG</text><text class="nodelabel" y="52">Search Engine Expert</text>
-            </g>
-            <g class="node gate" tabindex="0" role="button" data-id="code-reviewer" data-card="card-code-reviewer" transform="translate(327,512)">
-              <circle class="ring-outer" r="34"/><text class="callsign" y="5">REV</text><text class="nodelabel" y="52">Code-Reviewer</text>
-            </g>
-            <g class="node mem" tabindex="0" role="button" data-id="memory-agent" data-card="card-memory-agent" transform="translate(381,275)">
-              <circle class="ring-outer" r="34"/><text class="callsign" y="5">MEM</text><text class="nodelabel" y="52">Memory-Agent</text>
-            </g>
-            <g class="node hub" tabindex="0" role="button" data-id="aluf" data-card="card-aluf" transform="translate(600,450)">
-              <circle class="ring-outer" r="46"/><text class="callsign" y="6" style="font-size:17px">ALF ★</text><text class="nodelabel" y="66">Aluf⭐ — Orchestrator</text>
-            </g>
-          </g>
-        </svg>
-      </div>
-
-      <div class="diagram-foot">
-        <span id="focusreadout">FOCUS: none — click a node to trace it</span>
-        <button id="clearfocus" type="button">Clear focus</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ WORKFLOW ============ -->
-  <section id="workflow">
-    <div class="section-head"><span class="section-num">02</span><h2 class="section-title">The Aluf⭐ Workflow</h2></div>
-    <p class="section-lede">Every task run through Aluf follows this exact seven-step sequence, defined in <code class="mono">agents/Aluf.agent.md</code>. Skipping a step is treated as a defect, not an optimization.</p>
-    <div class="stepper reveal">
-      <div class="step"><div class="n">01</div><h4>Analyze &amp; Plan</h4><p>Identify domain, files, intent. Ask one focused question if ambiguous — never guess.</p></div>
-      <div class="step"><div class="n">02</div><h4>Memory Retrieve</h4><p>Invoke Memory-Agent (RETRIEVE) with domain + task. Fold insights into the specialist prompt.</p></div>
-      <div class="step"><div class="n">03</div><h4>Delegate</h4><p>Invoke specialist(s) in dependency order, each instructed to load <code class="mono">issta-stack</code> + its domain skills.</p></div>
-      <div class="step"><div class="n">04</div><h4>Code Review</h4><p>Code-Reviewer checks every change. Disputes go through one arbitration round, then the ruling is final.</p></div>
-      <div class="step"><div class="n">05</div><h4>Rate Agents</h4><p><code class="mono">rating-skill</code> scores every invoked agent 1–5 against the task outcome.</p></div>
-      <div class="step"><div class="n">06</div><h4>Memory Store</h4><p>Memory-Agent (STORE) writes the entry, appends the index row, and updates the ledger.</p></div>
-      <div class="step"><div class="n">07</div><h4>Final Report</h4><p>A structured report — agents invoked, conflicts resolved, memory status — always closes the task.</p></div>
-    </div>
-  </section>
-
-  <!-- ============ AGENTS ============ -->
-  <section id="agents">
-    <div class="section-head"><span class="section-num">03</span><h2 class="section-title">Agent Reference</h2></div>
-    <p class="section-lede">All eight agents live in <code class="mono">agents/*.agent.md</code>. Click a card — or a node in the diagram above — to expand it.</p>
-
-    <div class="grid-cards">
-
-      <details class="card hud amber" id="card-aluf" data-role="hub">
-        <summary><div><span class="card-id">ALF</span><div class="card-name">Aluf⭐</div><div class="card-role">Orchestrator — mandatory entry point</div></div><span class="chevron">▸</span></summary>
-        <div class="card-body">
-          <h5>Role</h5>
-          <p>The developer talks exclusively to Aluf. It never writes code — it analyzes the task, retrieves memory, delegates to specialists, enforces Code-Reviewer, rates every agent, stores the outcome, and always closes with a structured report.</p>
-          <h5>Tools</h5>
-          <div class="badges"><span class="badge">read</span><span class="badge">search</span><span class="badge">edit</span><span class="badge">execute</span><span class="badge">agent</span></div>
-          <h5>Skills loaded</h5>
-          <div class="badges"><span class="badge skill">rating-skill (Aluf-only)</span></div>
-          <p style="margin-top:8px">Instructs every specialist to load <code>issta-stack</code> plus whatever <code>skill-route</code> maps for their domain.</p>
-          <h5>Arbitration rule</h5>
-          <p>When Code-Reviewer and a specialist disagree, Aluf rules once. Max one arbitration round per issue — the ruling stands even if re-raised.</p>
-          <h5>File</h5>
-          <p class="filepath">agents/Aluf.agent.md</p>
+      <!-- ============ WORKFLOW ============ -->
+      <section id="workflow">
+        <div class="section-head">
+          <span class="section-num">02</span>
+          <h2 class="section-title">The Aluf⭐ Workflow</h2>
         </div>
-      </details>
+        <p class="section-lede">
+          Every task run through Aluf follows this exact sequence, defined in
+          <code class="mono">agents/Aluf.agent.md</code>. Each major transition
+          has a mandatory verification gate — passing the gate is required
+          before the next step begins.
+        </p>
 
-      <details class="card hud" id="card-hotel-2017">
-        <summary><div><span class="card-id">H17</span><div class="card-name">Hotel-Expert-2017</div><div class="card-role">Legacy ASP.NET MVC 5 hotel domain</div></div><span class="chevron">▸</span></summary>
-        <div class="card-body">
-          <h5>Domain</h5>
-          <p>Everything under Issta2017.sln's hotel vertical — category page → destination pages → results → filter/sort → details → rooms AJAX → order/checkout. Owns session-key conventions end to end.</p>
-          <h5>Tools</h5>
-          <div class="badges"><span class="badge">read</span><span class="badge">search</span><span class="badge">edit</span></div>
-          <h5>Skills loaded</h5>
-          <div class="badges"><span class="badge skill">issta-stack (mandatory)</span><span class="badge skill">gtm-ga4-tracking (analytics tasks)</span></div>
-          <h5>Owns</h5>
-          <ul><li><code>Controllers/HotelsController.cs</code></li><li><code>Code/Managers/HotelsManager.cs</code> (~4000+ lines)</li><li><code>Code/Services/Hotel/HotelService.cs</code></li><li><code>Code/Builders/Hotels/</code>, <code>Views/Hotels/</code></li></ul>
-          <h5>Hard rules</h5>
-          <ul><li>No <code>Task.Run</code> — use <code>HostingEnvironment.QueueBackgroundWorkItem</code></li><li>Never lower <code>MaxJsonLength</code> on the rooms endpoint</li></ul>
-          <p class="filepath">agents/Hotel-Expert-2017.agent.md</p>
+        <div
+          class="callout reveal"
+          style="border-color: var(--rose); background: var(--rose-soft)"
+        >
+          <b>What are the hooks?</b> Aluf has 5 mandatory checkpoints that fire
+          at every key transition. Each is a checklist Aluf must answer out
+          loud. A failed check halts the response entirely — it does not skip
+          the step and continue.
+          <ul
+            style="margin: 8px 0 0; padding-inline-start: 18px; font-size: 13px"
+          >
+            <li>
+              <b>Step 0</b> — Pre-task guard: 4-item checklist + 3
+              self-questions before any work starts
+            </li>
+            <li>
+              <b>Gate 2b</b> — Post-memory: confirms Memory-Agent was called and
+              insights are in the prompt
+            </li>
+            <li>
+              <b>Gate 3b</b> — Post-delegation: confirms specialist was invoked
+              and real output received (no inline code by Aluf)
+            </li>
+            <li>
+              <b>Gate 4b</b> — Post-review: confirms every Code-Reviewer issue
+              is fixed or formally dismissed — nothing pending
+            </li>
+            <li>
+              <b>Gate 5b</b> — Pre-report: confirms Rating-Agent returned a
+              report and escalations are prepared
+            </li>
+          </ul>
         </div>
-      </details>
 
-      <details class="card hud" id="card-hotel-v5">
-        <summary><div><span class="card-id">HV5</span><div class="card-name">Hotel-Expert-V5</div><div class="card-role">ITS V5 · Gimmonix adapter</div></div><span class="chevron">▸</span></summary>
-        <div class="card-body">
-          <h5>Domain</h5>
-          <p>The Gimmonix adapter ecosystem: search → details → cancellation policy → book → segment financial report. Owns the supplier code lookup tables.</p>
-          <h5>Tools</h5>
-          <div class="badges"><span class="badge">read</span><span class="badge">search</span><span class="badge">edit</span></div>
-          <h5>Skills loaded</h5>
-          <div class="badges"><span class="badge skill">issta-stack</span><span class="badge skill">dotnet-clean-arch</span><span class="badge skill">gimmonix-adapter</span></div>
-          <h5>Critical invariant</h5>
-          <p><code>sessionId</code> from the Search response must flow through Details → Book untouched. New suppliers require updating <b>both</b> <code>ConvertSupplierId</code> and <code>ConvertSupplierName</code> lookup tables.</p>
-          <p class="filepath">agents/Hotel-Expert-V5.agent.md</p>
+        <div class="stepper reveal">
+          <div class="step" style="border-top: 2px solid var(--rose)">
+            <div class="n" style="color: var(--rose)">00</div>
+            <h4>Self-Check Guard</h4>
+            <p>
+              Pre-task hook. 4-item checklist + 3 self-questions. Must pass
+              before Step 1 begins.
+            </p>
+          </div>
+          <div class="step">
+            <div class="n">01</div>
+            <h4>Analyze &amp; Plan</h4>
+            <p>
+              Identify domain, intent, files. Classify task type:
+              <code class="mono"
+                >new-feature&nbsp;/ bugfix / refactor / investigation</code
+              >.
+            </p>
+          </div>
+          <div class="step">
+            <div class="n">02</div>
+            <h4>Memory Retrieve <span class="hook-badge">Gate 2b</span></h4>
+            <p>
+              Invoke Memory-Agent (RETRIEVE). Gate confirms the call happened
+              and insights are in the specialist prompt.
+            </p>
+          </div>
+          <div class="step">
+            <div class="n">03</div>
+            <h4>Delegate <span class="hook-badge">Gate 3b</span></h4>
+            <p>
+              Invoke specialist(s) with task type + memory context. Gate
+              confirms real output received — no inline self-implementation by
+              Aluf.
+            </p>
+          </div>
+          <div class="step">
+            <div class="n">04</div>
+            <h4>Code Review <span class="hook-badge">Gate 4b</span></h4>
+            <p>
+              Code-Reviewer checks every change. Gate confirms every issue is
+              fixed or dismissed — nothing left pending.
+            </p>
+          </div>
+          <div class="step">
+            <div class="n">05</div>
+            <h4>Rating-Agent <span class="hook-badge">Gate 5b</span></h4>
+            <p>
+              Rating-Agent reads history, scores 1–5, invokes Memory-Agent
+              (STORE). Gate confirms report received before Final Report.
+            </p>
+          </div>
+          <div class="step">
+            <div class="n">06</div>
+            <h4>Final Report</h4>
+            <p>
+              Structured report always closes the task. Escalation flag appears
+              if any agent scored ≤ 2.
+            </p>
+          </div>
         </div>
-      </details>
+      </section>
 
-      <details class="card hud" id="card-search-engine">
-        <summary><div><span class="card-id">ENG</span><div class="card-name">Search Engine Expert</div><div class="card-role">Angular search-engine widget &amp; lib</div></div><span class="chevron">▸</span></summary>
-        <div class="card-body">
-          <h5>Domain</h5>
-          <p>The multi-product, tab-driven, lazily-loaded search form system (16 engine types: flights, hotels, ski, cruise, packages...). Every engine extends <code>BaseEngineComponent</code>, configured through <code>ENGINE_REGISTRY</code>.</p>
-          <h5>Tools</h5>
-          <div class="badges"><span class="badge">read</span><span class="badge">search</span><span class="badge">edit</span></div>
-          <h5>Skills loaded</h5>
-          <div class="badges"><span class="badge skill">issta-stack</span><span class="badge skill">angular-patterns</span></div>
-          <h5>Boundary</h5>
-          <p>Client-side Angular only — no backend, no SSR. Invoked as a sub-agent by WebAgent-Expert-Hotel-Client whenever a task touches engine internals.</p>
-          <p class="filepath">agents/search-engine-expert.agent.md</p>
+      <!-- ============ AGENTS ============ -->
+      <section id="agents">
+        <div class="section-head">
+          <span class="section-num">03</span>
+          <h2 class="section-title">Agent Reference</h2>
         </div>
-      </details>
+        <p class="section-lede">
+          All nine agents live in <code class="mono">agents/*.agent.md</code>.
+          Click a card — or a node in the diagram above — to expand it.
+        </p>
 
-      <details class="card hud" id="card-webagent-client">
-        <summary><div><span class="card-id">WHC</span><div class="card-name">WebAgent-Expert-Hotel-Client</div><div class="card-role">Angular hotel results page</div></div><span class="chevron">▸</span></summary>
-        <div class="card-body">
-          <h5>Domain</h5>
-          <p><code>hotels-search-page</code> app: results list, filters, Mapbox map, GA4 tracking, session/context restore. Treats the embedded search-engine widget as a black box.</p>
-          <h5>Tools</h5>
-          <div class="badges"><span class="badge">read</span><span class="badge">search</span><span class="badge">edit</span><span class="badge">agent</span></div>
-          <h5>Skills loaded</h5>
-          <div class="badges"><span class="badge skill">issta-stack</span><span class="badge skill">angular-patterns</span><span class="badge skill">gtm-ga4-tracking</span></div>
-          <h5>Sub-delegation</h5>
-          <p>Anything touching engine internals (tabs, inputs, <code>InputConfig</code>, draft restore) is delegated to <b>Search Engine Expert</b> — never edited directly. This is the one peer-to-peer edge on the diagram (dashed).</p>
-          <p class="filepath">agents/WebAgent-Expert-Hotel-Client.agent.md</p>
+        <div class="grid-cards">
+          <details class="card hud amber" id="card-aluf" data-role="hub">
+            <summary>
+              <div>
+                <span class="card-id">ALF</span>
+                <div class="card-name">Aluf⭐</div>
+                <div class="card-role">
+                  Orchestrator — mandatory entry point
+                </div>
+              </div>
+              <span class="chevron">▸</span>
+            </summary>
+            <div class="card-body">
+              <h5>Role</h5>
+              <p>
+                The developer talks exclusively to Aluf. It never writes code —
+                it analyzes the task, retrieves memory, delegates to
+                specialists, enforces Code-Reviewer, rates every agent, stores
+                the outcome, and always closes with a structured report.
+              </p>
+              <h5>Tools</h5>
+              <div class="badges">
+                <span class="badge">read</span><span class="badge">search</span
+                ><span class="badge">edit</span
+                ><span class="badge">execute</span
+                ><span class="badge">agent</span>
+              </div>
+              <h5>Skills loaded</h5>
+              <div class="badges">
+                <span
+                  class="badge"
+                  style="color: var(--paper-faint); border-color: var(--grid)"
+                  >none — Aluf loads no skills itself</span
+                >
+              </div>
+              <p style="margin-top: 8px">
+                Instructs every specialist to load <code>issta-stack</code> plus
+                whatever <code>skill-route</code> maps for their domain.
+                <code>rating-skill</code> is owned by Rating-Agent, not Aluf.
+              </p>
+              <h5>Arbitration rule</h5>
+              <p>
+                When Code-Reviewer and a specialist disagree, Aluf rules once.
+                Max one arbitration round per issue — the ruling stands even if
+                re-raised.
+              </p>
+              <h5>File</h5>
+              <p class="filepath">agents/Aluf.agent.md</p>
+            </div>
+          </details>
+
+          <details class="card hud" id="card-hotel-2017">
+            <summary>
+              <div>
+                <span class="card-id">H17</span>
+                <div class="card-name">Hotel-Expert-2017</div>
+                <div class="card-role">Legacy ASP.NET MVC 5 hotel domain</div>
+              </div>
+              <span class="chevron">▸</span>
+            </summary>
+            <div class="card-body">
+              <h5>Domain</h5>
+              <p>
+                Everything under Issta2017.sln's hotel vertical — category page
+                → destination pages → results → filter/sort → details → rooms
+                AJAX → order/checkout. Owns session-key conventions end to end.
+              </p>
+              <h5>Tools</h5>
+              <div class="badges">
+                <span class="badge">read</span><span class="badge">search</span
+                ><span class="badge">edit</span>
+              </div>
+              <h5>Skills loaded</h5>
+              <div class="badges">
+                <span class="badge skill">issta-stack (mandatory)</span
+                ><span class="badge skill"
+                  >gtm-ga4-tracking (analytics tasks)</span
+                >
+              </div>
+              <h5>Owns</h5>
+              <ul>
+                <li><code>Controllers/HotelsController.cs</code></li>
+                <li>
+                  <code>Code/Managers/HotelsManager.cs</code> (~4000+ lines)
+                </li>
+                <li><code>Code/Services/Hotel/HotelService.cs</code></li>
+                <li>
+                  <code>Code/Builders/Hotels/</code>, <code>Views/Hotels/</code>
+                </li>
+              </ul>
+              <h5>Hard rules</h5>
+              <ul>
+                <li>
+                  No <code>Task.Run</code> — use
+                  <code>HostingEnvironment.QueueBackgroundWorkItem</code>
+                </li>
+                <li>
+                  Never lower <code>MaxJsonLength</code> on the rooms endpoint
+                </li>
+              </ul>
+              <p class="filepath">agents/Hotel-Expert-2017.agent.md</p>
+            </div>
+          </details>
+
+          <details class="card hud" id="card-hotel-v5">
+            <summary>
+              <div>
+                <span class="card-id">HV5</span>
+                <div class="card-name">Hotel-Expert-V5</div>
+                <div class="card-role">ITS V5 · Gimmonix adapter</div>
+              </div>
+              <span class="chevron">▸</span>
+            </summary>
+            <div class="card-body">
+              <h5>Domain</h5>
+              <p>
+                The Gimmonix adapter ecosystem: search → details → cancellation
+                policy → book → segment financial report. Owns the supplier code
+                lookup tables.
+              </p>
+              <h5>Tools</h5>
+              <div class="badges">
+                <span class="badge">read</span><span class="badge">search</span
+                ><span class="badge">edit</span>
+              </div>
+              <h5>Skills loaded</h5>
+              <div class="badges">
+                <span class="badge skill">issta-stack</span
+                ><span class="badge skill">dotnet-clean-arch</span
+                ><span class="badge skill">gimmonix-adapter</span>
+              </div>
+              <h5>Critical invariant</h5>
+              <p>
+                <code>sessionId</code> from the Search response must flow
+                through Details → Book untouched. New suppliers require updating
+                <b>both</b> <code>ConvertSupplierId</code> and
+                <code>ConvertSupplierName</code> lookup tables.
+              </p>
+              <p class="filepath">agents/Hotel-Expert-V5.agent.md</p>
+            </div>
+          </details>
+
+          <details class="card hud" id="card-search-engine">
+            <summary>
+              <div>
+                <span class="card-id">ENG</span>
+                <div class="card-name">Search Engine Expert</div>
+                <div class="card-role">
+                  Angular search-engine widget &amp; lib
+                </div>
+              </div>
+              <span class="chevron">▸</span>
+            </summary>
+            <div class="card-body">
+              <h5>Domain</h5>
+              <p>
+                The multi-product, tab-driven, lazily-loaded search form system
+                (16 engine types: flights, hotels, ski, cruise, packages...).
+                Every engine extends <code>BaseEngineComponent</code>,
+                configured through <code>ENGINE_REGISTRY</code>.
+              </p>
+              <h5>Tools</h5>
+              <div class="badges">
+                <span class="badge">read</span><span class="badge">search</span
+                ><span class="badge">edit</span>
+              </div>
+              <h5>Skills loaded</h5>
+              <div class="badges">
+                <span class="badge skill">issta-stack</span
+                ><span class="badge skill">angular-patterns</span>
+              </div>
+              <h5>Boundary</h5>
+              <p>
+                Client-side Angular only — no backend, no SSR. Invoked as a
+                sub-agent by WebAgent-Expert-Hotel-Client whenever a task
+                touches engine internals.
+              </p>
+              <p class="filepath">agents/search-engine-expert.agent.md</p>
+            </div>
+          </details>
+
+          <details class="card hud" id="card-webagent-client">
+            <summary>
+              <div>
+                <span class="card-id">WHC</span>
+                <div class="card-name">WebAgent-Expert-Hotel-Client</div>
+                <div class="card-role">Angular hotel results page</div>
+              </div>
+              <span class="chevron">▸</span>
+            </summary>
+            <div class="card-body">
+              <h5>Domain</h5>
+              <p>
+                <code>hotels-search-page</code> app: results list, filters,
+                Mapbox map, GA4 tracking, session/context restore. Treats the
+                embedded search-engine widget as a black box.
+              </p>
+              <h5>Tools</h5>
+              <div class="badges">
+                <span class="badge">read</span><span class="badge">search</span
+                ><span class="badge">edit</span><span class="badge">agent</span>
+              </div>
+              <h5>Skills loaded</h5>
+              <div class="badges">
+                <span class="badge skill">issta-stack</span
+                ><span class="badge skill">angular-patterns</span
+                ><span class="badge skill">gtm-ga4-tracking</span>
+              </div>
+              <h5>Sub-delegation</h5>
+              <p>
+                Anything touching engine internals (tabs, inputs,
+                <code>InputConfig</code>, draft restore) is delegated to
+                <b>Search Engine Expert</b> — never edited directly. This is the
+                one peer-to-peer edge on the diagram (dashed).
+              </p>
+              <p class="filepath">
+                agents/WebAgent-Expert-Hotel-Client.agent.md
+              </p>
+            </div>
+          </details>
+
+          <details class="card hud" id="card-webagent-server">
+            <summary>
+              <div>
+                <span class="card-id">WHS</span>
+                <div class="card-name">WebAgent-Hotel-Server-Expert</div>
+                <div class="card-role">.NET 10 hotel server</div>
+              </div>
+              <span class="chevron">▸</span>
+            </summary>
+            <div class="card-body">
+              <h5>Domain</h5>
+              <p>
+                Clean Architecture hotel server: <code>HotelsController</code> →
+                Application (Commands/Queries/BL/Mappers) → Infrastructure
+                (Suppliers, Filter, Geo) → ITS V5. Workers consume the Service
+                Bus queue.
+              </p>
+              <h5>Tools</h5>
+              <div class="badges">
+                <span class="badge">read</span><span class="badge">search</span
+                ><span class="badge">edit</span
+                ><span class="badge">execute</span>
+              </div>
+              <h5>Skills loaded</h5>
+              <div class="badges">
+                <span class="badge skill">issta-stack</span
+                ><span class="badge skill">dotnet-clean-arch</span>
+              </div>
+              <h5>Key business rules</h5>
+              <ul>
+                <li>
+                  BNPL: <code>IsBNPL &amp;&amp; daysToCheckIn ≥ threshold</code>
+                </li>
+                <li>CUG: <code>IsCugEnabled &amp;&amp; isLoggedIn</code></li>
+                <li>
+                  No-results suppression when both Gimmonix suppliers return 0
+                </li>
+              </ul>
+              <p class="filepath">
+                agents/WebAgent-Hotel-Server-Expert.agent.md
+              </p>
+            </div>
+          </details>
+
+          <details
+            class="card hud rose"
+            id="card-code-reviewer"
+            data-role="gate"
+          >
+            <summary>
+              <div>
+                <span class="card-id">REV</span>
+                <div class="card-name">Code-Reviewer</div>
+                <div class="card-role">
+                  Quality gate — final check on every change
+                </div>
+              </div>
+              <span class="chevron">▸</span>
+            </summary>
+            <div class="card-body">
+              <h5>Role</h5>
+              <p>
+                Reviews correctness, security (OWASP), naming, duplication,
+                error handling. Never edits code, never runs commands. Approval
+                is implied by an empty issue list.
+              </p>
+              <h5>Tools</h5>
+              <div class="badges">
+                <span class="badge">read</span><span class="badge">search</span>
+              </div>
+              <h5>Skills loaded</h5>
+              <div class="badges">
+                <span class="badge skill">owasp-security (mandatory)</span
+                ><span class="badge skill">issta-stack (conventions)</span>
+              </div>
+              <h5>Challengeable</h5>
+              <p>
+                Every issue can be disputed with a reasoned argument. Aluf
+                arbitrates disagreements that survive a challenge — one round,
+                final.
+              </p>
+              <p class="filepath">agents/Code-Reviewer.agent.md</p>
+            </div>
+          </details>
+
+          <details
+            class="card hud rose"
+            id="card-rating-agent"
+            data-role="gate"
+          >
+            <summary>
+              <div>
+                <span class="card-id">RTG</span>
+                <div class="card-name">Rating-Agent</div>
+                <div class="card-role">
+                  Performance evaluator — invoked by Aluf⭐ after every code
+                  review
+                </div>
+              </div>
+              <span class="chevron">▸</span>
+            </summary>
+            <div class="card-body">
+              <h5>Role</h5>
+              <p>
+                Invoked exclusively by Aluf⭐ after code review resolves. Reads
+                the historical performance ledger, scores each agent 1–5,
+                generates the rating report, then invokes Memory-Agent (STORE)
+                to record the task entry and update the ledger. Never writes
+                code, never reviews code.
+              </p>
+              <h5>Required input from Aluf⭐</h5>
+              <ul>
+                <li>Task description, domain, and task type</li>
+                <li>
+                  Per agent: what was asked, what was produced, any issues
+                </li>
+                <li>
+                  Code-Reviewer findings: issues raised, upheld or dismissed
+                </li>
+                <li>Overall outcome + key insights discovered</li>
+              </ul>
+              <h5>Trend awareness</h5>
+              <p>
+                Reads <code>memory/agent-performance.md</code> before scoring.
+                Distinguishes patterns (<i>"3rd consecutive failure"</i>) from
+                one-offs (<i>"first miss after 5 flawless tasks"</i>).
+              </p>
+              <h5>Escalation rule</h5>
+              <p>
+                If any agent scores ≤ 2, flags it in the report. Aluf then
+                injects a warning into that agent’s next delegation prompt.
+              </p>
+              <h5>Tools</h5>
+              <div class="badges">
+                <span class="badge">read</span><span class="badge">write</span
+                ><span class="badge">agent</span>
+              </div>
+              <h5>Skills loaded</h5>
+              <div class="badges">
+                <span class="badge skill">rating-skill (Rating-Agent only)</span
+                ><span class="badge skill">memory-structure</span>
+              </div>
+              <p class="filepath">agents/Rating-Agent.agent.md</p>
+            </div>
+          </details>
+
+          <details
+            class="card hud amber"
+            id="card-memory-agent"
+            data-role="hub"
+          >
+            <summary>
+              <div>
+                <span class="card-id">MEM</span>
+                <div class="card-name">Memory-Agent</div>
+                <div class="card-role">
+                  Knowledge persistence — RETRIEVE / STORE
+                </div>
+              </div>
+              <span class="chevron">▸</span>
+            </summary>
+            <div class="card-body">
+              <h5>Modes</h5>
+              <p>
+                <b>RETRIEVE</b> — invoked by Aluf⭐ before any specialist is
+                called. Surfaces prior insights and gotchas for the specialist
+                prompt. Read-only.<br /><b>STORE</b> — invoked by Rating-Agent
+                after every completed task. Writes the structured entry, appends
+                one row to <code>index.md</code>, updates the domain file, and
+                extends the performance ledger.
+              </p>
+              <h5>Tools</h5>
+              <div class="badges">
+                <span class="badge">read</span><span class="badge">edit</span
+                ><span class="badge">search</span>
+              </div>
+              <h5>Skills loaded</h5>
+              <div class="badges">
+                <span class="badge skill">memory-structure (mandatory)</span>
+              </div>
+              <h5>Hard rule</h5>
+              <p>
+                Never lose data — append only. Idempotency check before writing:
+                same date + agents + domain updates the existing entry instead
+                of duplicating it.
+              </p>
+              <p class="filepath">agents/Memory-Agent.agent.md</p>
+            </div>
+          </details>
         </div>
-      </details>
+      </section>
 
-      <details class="card hud" id="card-webagent-server">
-        <summary><div><span class="card-id">WHS</span><div class="card-name">WebAgent-Hotel-Server-Expert</div><div class="card-role">.NET 10 hotel server</div></div><span class="chevron">▸</span></summary>
-        <div class="card-body">
-          <h5>Domain</h5>
-          <p>Clean Architecture hotel server: <code>HotelsController</code> → Application (Commands/Queries/BL/Mappers) → Infrastructure (Suppliers, Filter, Geo) → ITS V5. Workers consume the Service Bus queue.</p>
-          <h5>Tools</h5>
-          <div class="badges"><span class="badge">read</span><span class="badge">search</span><span class="badge">edit</span><span class="badge">execute</span></div>
-          <h5>Skills loaded</h5>
-          <div class="badges"><span class="badge skill">issta-stack</span><span class="badge skill">dotnet-clean-arch</span></div>
-          <h5>Key business rules</h5>
-          <ul><li>BNPL: <code>IsBNPL &amp;&amp; daysToCheckIn ≥ threshold</code></li><li>CUG: <code>IsCugEnabled &amp;&amp; isLoggedIn</code></li><li>No-results suppression when both Gimmonix suppliers return 0</li></ul>
-          <p class="filepath">agents/WebAgent-Hotel-Server-Expert.agent.md</p>
+      <!-- ============ SKILLS ============ -->
+      <section id="skills">
+        <div class="section-head">
+          <span class="section-num">04</span>
+          <h2 class="section-title">Skills Registry</h2>
         </div>
-      </details>
+        <p class="section-lede">
+          Skills are conventions and code patterns, not agents — an agent's
+          <b style="color: var(--paper)">Before You Begin</b> block names
+          exactly which ones it must read before touching code.
+          <code class="mono">skill-route</code> is the master directory every
+          agent can consult to find the rest.
+        </p>
 
-      <details class="card hud rose" id="card-code-reviewer" data-role="gate">
-        <summary><div><span class="card-id">REV</span><div class="card-name">Code-Reviewer</div><div class="card-role">Quality gate — final check on every change</div></div><span class="chevron">▸</span></summary>
-        <div class="card-body">
-          <h5>Role</h5>
-          <p>Reviews correctness, security (OWASP), naming, duplication, error handling. Never edits code, never runs commands. Approval is implied by an empty issue list.</p>
-          <h5>Tools</h5>
-          <div class="badges"><span class="badge">read</span><span class="badge">search</span></div>
-          <h5>Skills loaded</h5>
-          <div class="badges"><span class="badge skill">owasp-security (mandatory)</span><span class="badge skill">issta-stack (conventions)</span></div>
-          <h5>Challengeable</h5>
-          <p>Every issue can be disputed with a reasoned argument. Aluf arbitrates disagreements that survive a challenge — one round, final.</p>
-          <p class="filepath">agents/Code-Reviewer.agent.md</p>
+        <div class="hud table-wrap reveal" style="padding: 6px">
+          <table>
+            <thead>
+              <tr>
+                <th>Skill</th>
+                <th>Path</th>
+                <th>Purpose</th>
+                <th>Required by</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>skill-route</code></td>
+                <td class="filepath">skills/skill-route/SKILL.md</td>
+                <td>Master skills directory — load first to find the rest.</td>
+                <td>All agents (routing)</td>
+              </tr>
+              <tr>
+                <td><code>issta-stack</code></td>
+                <td class="filepath">skills/issta-stack/SKILL.md</td>
+                <td>
+                  Legacy .NET 4.8 MVC + modern .NET 10 Clean Architecture +
+                  Angular + jQuery conventions, RTL rules, naming.
+                </td>
+                <td>All coding agents — mandatory</td>
+              </tr>
+              <tr>
+                <td><code>angular-patterns</code></td>
+                <td class="filepath">skills/angular-patterns/SKILL.md</td>
+                <td>
+                  Angular 17+/21 standalone components, signals, RxJS, DI, lazy
+                  loading in the widget monorepo.
+                </td>
+                <td>Search Engine Expert, WebAgent-Expert-Hotel-Client</td>
+              </tr>
+              <tr>
+                <td><code>dotnet-clean-arch</code></td>
+                <td class="filepath">skills/dotnet-clean-arch/SKILL.md</td>
+                <td>
+                  MediatR CQRS, Result pattern, BackgroundService Workers, DI
+                  registration, layer discipline.
+                </td>
+                <td>WebAgent-Hotel-Server-Expert, Hotel-Expert-V5</td>
+              </tr>
+              <tr>
+                <td><code>owasp-security</code></td>
+                <td class="filepath">skills/owasp-security/SKILL.md</td>
+                <td>
+                  OWASP Top 10 checklist for C# + Angular — injection, XSS,
+                  broken auth, data exposure.
+                </td>
+                <td>Code-Reviewer</td>
+              </tr>
+              <tr>
+                <td><code>gtm-ga4-tracking</code></td>
+                <td class="filepath">skills/gtm-ga4-tracking/SKILL.md</td>
+                <td>
+                  GTM dataLayer push patterns and GA4 event naming conventions.
+                </td>
+                <td>
+                  Hotel-Expert-2017, WebAgent-Expert-Hotel-Client (analytics
+                  tasks)
+                </td>
+              </tr>
+              <tr>
+                <td><code>gimmonix-adapter</code></td>
+                <td class="filepath">skills/gimmonix-adapter/SKILL.md</td>
+                <td>
+                  Gimmonix search/book/cancel contracts, CUG pricing, supplier
+                  mapping, error codes.
+                </td>
+                <td>Hotel-Expert-V5</td>
+              </tr>
+              <tr>
+                <td><code>memory-structure</code></td>
+                <td class="filepath">skills/memory-structure/SKILL.md</td>
+                <td>
+                  Memory file formats — index, entry, domain file, and the
+                  rating ledger.
+                </td>
+                <td>Memory-Agent</td>
+              </tr>
+              <tr>
+                <td><code>rating-skill</code></td>
+                <td class="filepath">skills/rating-skill/SKILL.md</td>
+                <td>
+                  1–5 agent performance scoring criteria, ledger format, and
+                  trend-context rules.
+                </td>
+                <td>Rating-Agent only</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-      </details>
+      </section>
 
-      <details class="card hud amber" id="card-memory-agent" data-role="hub">
-        <summary><div><span class="card-id">MEM</span><div class="card-name">Memory-Agent</div><div class="card-role">Knowledge persistence — RETRIEVE / STORE</div></div><span class="chevron">▸</span></summary>
-        <div class="card-body">
-          <h5>Modes</h5>
-          <p><b>RETRIEVE</b> (read-only) surfaces prior insights before a task starts. <b>STORE</b> writes a structured entry, appends the index, updates the domain file, and (via Aluf) the rating ledger.</p>
-          <h5>Tools</h5>
-          <div class="badges"><span class="badge">read</span><span class="badge">edit</span><span class="badge">search</span></div>
-          <h5>Skills loaded</h5>
-          <div class="badges"><span class="badge skill">memory-structure (mandatory)</span></div>
-          <h5>Hard rule</h5>
-          <p>Never lose data — append only. Idempotency check before writing: same date + agents + domain updates the existing entry instead of duplicating it.</p>
-          <p class="filepath">agents/Memory-Agent.agent.md</p>
+      <!-- ============ MEMORY ============ -->
+      <section id="memory">
+        <div class="section-head">
+          <span class="section-num">05</span>
+          <h2 class="section-title">Memory System</h2>
         </div>
-      </details>
+        <p class="section-lede">
+          A plain-markdown, append-only knowledge base — no database, no
+          service. Managed exclusively by Memory-Agent per
+          <code class="mono">skills/memory-structure/SKILL.md</code>.
+        </p>
 
-    </div>
-  </section>
-
-  <!-- ============ SKILLS ============ -->
-  <section id="skills">
-    <div class="section-head"><span class="section-num">04</span><h2 class="section-title">Skills Registry</h2></div>
-    <p class="section-lede">Skills are conventions and code patterns, not agents — an agent's <b style="color:var(--paper)">Before You Begin</b> block names exactly which ones it must read before touching code. <code class="mono">skill-route</code> is the master directory every agent can consult to find the rest.</p>
-
-    <div class="hud table-wrap reveal" style="padding:6px">
-      <table>
-        <thead><tr><th>Skill</th><th>Path</th><th>Purpose</th><th>Required by</th></tr></thead>
-        <tbody>
-          <tr><td><code>skill-route</code></td><td class="filepath">skills/skill-route/SKILL.md</td><td>Master skills directory — load first to find the rest.</td><td>All agents (routing)</td></tr>
-          <tr><td><code>issta-stack</code></td><td class="filepath">skills/issta-stack/SKILL.md</td><td>Legacy .NET 4.8 MVC + modern .NET 10 Clean Architecture + Angular + jQuery conventions, RTL rules, naming.</td><td>All coding agents — mandatory</td></tr>
-          <tr><td><code>angular-patterns</code></td><td class="filepath">skills/angular-patterns/SKILL.md</td><td>Angular 17+/21 standalone components, signals, RxJS, DI, lazy loading in the widget monorepo.</td><td>Search Engine Expert, WebAgent-Expert-Hotel-Client</td></tr>
-          <tr><td><code>dotnet-clean-arch</code></td><td class="filepath">skills/dotnet-clean-arch/SKILL.md</td><td>MediatR CQRS, Result pattern, BackgroundService Workers, DI registration, layer discipline.</td><td>WebAgent-Hotel-Server-Expert, Hotel-Expert-V5</td></tr>
-          <tr><td><code>owasp-security</code></td><td class="filepath">skills/owasp-security/SKILL.md</td><td>OWASP Top 10 checklist for C# + Angular — injection, XSS, broken auth, data exposure.</td><td>Code-Reviewer</td></tr>
-          <tr><td><code>gtm-ga4-tracking</code></td><td class="filepath">skills/gtm-ga4-tracking/SKILL.md</td><td>GTM dataLayer push patterns and GA4 event naming conventions.</td><td>Hotel-Expert-2017, WebAgent-Expert-Hotel-Client (analytics tasks)</td></tr>
-          <tr><td><code>gimmonix-adapter</code></td><td class="filepath">skills/gimmonix-adapter/SKILL.md</td><td>Gimmonix search/book/cancel contracts, CUG pricing, supplier mapping, error codes.</td><td>Hotel-Expert-V5</td></tr>
-          <tr><td><code>memory-structure</code></td><td class="filepath">skills/memory-structure/SKILL.md</td><td>Memory file formats — index, entry, domain file, and the rating ledger.</td><td>Memory-Agent</td></tr>
-          <tr><td><code>rating-skill</code></td><td class="filepath">skills/rating-skill/SKILL.md</td><td>1–5 agent performance scoring criteria and ledger reporting format.</td><td>Aluf⭐ only</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- ============ MEMORY ============ -->
-  <section id="memory">
-    <div class="section-head"><span class="section-num">05</span><h2 class="section-title">Memory System</h2></div>
-    <p class="section-lede">A plain-markdown, append-only knowledge base — no database, no service. Managed exclusively by Memory-Agent per <code class="mono">skills/memory-structure/SKILL.md</code>.</p>
-
-    <div class="twocol">
-      <div class="hud reveal" style="padding:24px">
-        <h5 style="font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--paper-faint);margin:0 0 14px">Lifecycle</h5>
-        <div class="flowlist">
-          <ol class="flowlist" style="padding:0;margin:0">
-            <li><b>RETRIEVE</b> — before a specialist starts, Aluf calls Memory-Agent with <code>domain</code> + task description. Read-only; never writes files.</li>
-            <li><b>Work happens</b> — retrieved insights are folded into the specialist's prompt so past mistakes aren't repeated.</li>
-            <li><b>STORE</b> — after the task, Memory-Agent writes an entry, appends one row to <code>index.md</code>, and appends reusable bullets to the domain file.</li>
-            <li><b>Ledger</b> — Aluf appends one row per invoked agent to <code>agent-performance.md</code> with its 1–5 score.</li>
-          </ol>
+        <div class="twocol">
+          <div class="hud reveal" style="padding: 24px">
+            <h5
+              style="
+                font-family: var(--font-mono);
+                font-size: 11px;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                color: var(--paper-faint);
+                margin: 0 0 14px;
+              "
+            >
+              Lifecycle
+            </h5>
+            <div class="flowlist">
+              <ol class="flowlist" style="padding: 0; margin: 0">
+                <li>
+                  <b>RETRIEVE</b> — before a specialist starts, Aluf calls
+                  Memory-Agent with <code>domain</code> + task description.
+                  Read-only; never writes files.
+                </li>
+                <li>
+                  <b>Work happens</b> — retrieved insights are folded into the
+                  specialist's prompt so past mistakes aren't repeated.
+                </li>
+                <li>
+                  <b>STORE</b> — after the task, <b>Rating-Agent</b> invokes
+                  Memory-Agent. Memory-Agent writes the entry, appends one row
+                  to <code>index.md</code>, and appends reusable bullets to the
+                  domain file.
+                </li>
+                <li>
+                  <b>Ledger</b> — Rating-Agent appends one row per invoked agent
+                  to <code>agent-performance.md</code> with the 1–5 score and
+                  trend context.
+                </li>
+              </ol>
+            </div>
+          </div>
+          <div class="hud reveal" style="padding: 24px">
+            <h5
+              style="
+                font-family: var(--font-mono);
+                font-size: 11px;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                color: var(--paper-faint);
+                margin: 0 0 14px;
+              "
+            >
+              Score scale (rating-skill)
+            </h5>
+            <table class="compact">
+              <tbody>
+                <tr>
+                  <td class="mono" style="color: var(--amber)">5</td>
+                  <td>Flawless — no review issues, no arbitration</td>
+                </tr>
+                <tr>
+                  <td class="mono" style="color: var(--amber)">4</td>
+                  <td>Good — minor issues fixed without conflict</td>
+                </tr>
+                <tr>
+                  <td class="mono" style="color: var(--paper-dim)">3</td>
+                  <td>
+                    Acceptable — significant corrections or one arbitration
+                    round
+                  </td>
+                </tr>
+                <tr>
+                  <td class="mono" style="color: var(--rose)">2</td>
+                  <td>Poor — repeated failures, heavy intervention needed</td>
+                </tr>
+                <tr>
+                  <td class="mono" style="color: var(--rose)">1</td>
+                  <td>Failed — incorrect/harmful output, regression caused</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
-      <div class="hud reveal" style="padding:24px">
-        <h5 style="font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--paper-faint);margin:0 0 14px">Score scale (rating-skill)</h5>
-        <table class="compact">
-          <tbody>
-            <tr><td class="mono" style="color:var(--amber)">5</td><td>Flawless — no review issues, no arbitration</td></tr>
-            <tr><td class="mono" style="color:var(--amber)">4</td><td>Good — minor issues fixed without conflict</td></tr>
-            <tr><td class="mono" style="color:var(--paper-dim)">3</td><td>Acceptable — significant corrections or one arbitration round</td></tr>
-            <tr><td class="mono" style="color:var(--rose)">2</td><td>Poor — repeated failures, heavy intervention needed</td></tr>
-            <tr><td class="mono" style="color:var(--rose)">1</td><td>Failed — incorrect/harmful output, regression caused</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
 
-    <div class="hud reveal" style="padding:24px;margin-top:20px">
-      <h5 style="font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--paper-faint);margin:0 0 14px">File formats</h5>
-      <div class="twocol">
-        <div>
-          <p><b style="color:var(--paper)">index.md</b> row — one per stored task, append-only:</p>
-          <p class="filepath">| YYYY-MM-DD | entry-id | domain | [Agents] | task summary |</p>
-          <p style="margin-top:18px"><b style="color:var(--paper)">entries/YYYY-MM-DD_&lt;slug&gt;.md</b> — frontmatter (<code>id</code>, <code>date</code>, <code>agents</code>, <code>domain</code>, <code>outcome</code>) followed by Task Summary, Agents Involved, Key Insights &amp; Tricks, Outcome, Related Files.</p>
+        <div class="hud reveal" style="padding: 24px; margin-top: 20px">
+          <h5
+            style="
+              font-family: var(--font-mono);
+              font-size: 11px;
+              text-transform: uppercase;
+              letter-spacing: 0.08em;
+              color: var(--paper-faint);
+              margin: 0 0 14px;
+            "
+          >
+            File formats
+          </h5>
+          <div class="twocol">
+            <div>
+              <p>
+                <b style="color: var(--paper)">index.md</b> row — one per stored
+                task, append-only:
+              </p>
+              <p class="filepath">
+                | YYYY-MM-DD | entry-id | domain | [Agents] | task summary |
+              </p>
+              <p style="margin-top: 18px">
+                <b style="color: var(--paper)"
+                  >entries/YYYY-MM-DD_&lt;slug&gt;.md</b
+                >
+                — frontmatter (<code>id</code>, <code>date</code>,
+                <code>agents</code>, <code>domain</code>, <code>outcome</code>)
+                followed by Task Summary, Agents Involved, Key Insights &amp;
+                Tricks, Outcome, Related Files.
+              </p>
+            </div>
+            <div>
+              <p>
+                <b style="color: var(--paper)">domains/&lt;domain&gt;.md</b> —
+                living document, bullets only appended, never rewritten.
+              </p>
+              <p style="margin-top: 18px">
+                <b style="color: var(--paper)">agent-performance.md</b> — one
+                row per agent per task:
+                <code class="mono"
+                  >Date | Task | Agent | Score | Outcome | Notes</code
+                >. Corrections are new rows tagged <code>[CORRECTION]</code>,
+                never edits.
+              </p>
+            </div>
+          </div>
         </div>
-        <div>
-          <p><b style="color:var(--paper)">domains/&lt;domain&gt;.md</b> — living document, bullets only appended, never rewritten.</p>
-          <p style="margin-top:18px"><b style="color:var(--paper)">agent-performance.md</b> — one row per agent per task: <code class="mono">Date | Task | Agent | Score | Outcome | Notes</code>. Corrections are new rows tagged <code>[CORRECTION]</code>, never edits.</p>
+      </section>
+
+      <!-- ============ FOLDER MAP ============ -->
+      <section id="foldermap">
+        <div class="section-head">
+          <span class="section-num">06</span>
+          <h2 class="section-title">Workspace Folder Map</h2>
         </div>
-      </div>
-    </div>
-  </section>
+        <p class="section-lede">
+          Paths as they exist on disk in this checkout.
+          <b style="color: var(--paper)">Note:</b> the agent and skill files
+          themselves reference an absolute path,
+          <code class="mono">c:\Users\giladme\.copilot\...</code> — that's this
+          same tree's original authoring location, not a broken link. Treat
+          every path inside <code class="mono">*.agent.md</code> /
+          <code class="mono">SKILL.md</code> files as relative to
+          <i>wherever this workspace root actually lives</i>.
+        </p>
 
-  <!-- ============ FOLDER MAP ============ -->
-  <section id="foldermap">
-    <div class="section-head"><span class="section-num">06</span><h2 class="section-title">Workspace Folder Map</h2></div>
-    <p class="section-lede">Paths as they exist on disk in this checkout. <b style="color:var(--paper)">Note:</b> the agent and skill files themselves reference an absolute path, <code class="mono">c:\Users\giladme\.copilot\...</code> — that's this same tree's original authoring location, not a broken link. Treat every path inside <code class="mono">*.agent.md</code> / <code class="mono">SKILL.md</code> files as relative to <i>wherever this workspace root actually lives</i>.</p>
-
-    <div class="hud reveal">
-<pre class="tree"><span class="dir">agents-arch/</span>                         <span class="comment"># workspace root</span>
+        <div class="hud reveal">
+          <pre
+            class="tree"
+          ><span class="dir">agents-arch/</span>                         <span class="comment"># workspace root</span>
 ├── <span class="file">copilot-instructions.md</span>          <span class="comment"># master entry-point rules — start here</span>
 ├── <span class="dir">agents/</span>
 │   ├── <span class="file">Aluf.agent.md</span>                <span class="comment"># orchestrator</span>
@@ -803,6 +2511,7 @@
 │   ├── <span class="file">WebAgent-Expert-Hotel-Client.agent.md</span>
 │   ├── <span class="file">WebAgent-Hotel-Server-Expert.agent.md</span>
 │   ├── <span class="file">Code-Reviewer.agent.md</span>
+│   ├── <span class="file">Rating-Agent.agent.md</span>           <span class="comment"># performance evaluator</span>
 │   └── <span class="file">Memory-Agent.agent.md</span>
 ├── <span class="dir">skills/</span>
 │   ├── <span class="dir">skill-route/</span><span class="file">SKILL.md</span>         <span class="comment"># master skill registry — load first</span>
@@ -828,190 +2537,365 @@
 └── <span class="dir">help-docs/</span>
     └── <span class="file">architecture.html</span>            <span class="comment"># ← this page</span>
 </pre>
-    </div>
-  </section>
+        </div>
+      </section>
 
-  <!-- ============ ROUTING ============ -->
-  <section id="routing">
-    <div class="section-head"><span class="section-num">07</span><h2 class="section-title">Routing Guide</h2></div>
-    <p class="section-lede">How Aluf decides who gets the task — straight from <code class="mono">agents/Aluf.agent.md</code>.</p>
+      <!-- ============ ROUTING ============ -->
+      <section id="routing">
+        <div class="section-head">
+          <span class="section-num">07</span>
+          <h2 class="section-title">Routing Guide</h2>
+        </div>
+        <p class="section-lede">
+          How Aluf decides who gets the task — straight from
+          <code class="mono">agents/Aluf.agent.md</code>.
+        </p>
 
-    <div class="hud table-wrap reveal" style="padding:6px">
-      <table>
-        <thead><tr><th>If the task involves…</th><th>Route to</th></tr></thead>
-        <tbody>
-          <tr><td>Issta2017.sln, legacy ASP.NET MVC 5 hotel code</td><td><code>Hotel-Expert-2017</code></td></tr>
-          <tr><td>ITS V5, Gimmonix, <code>ITS.Adapters.*</code></td><td><code>Hotel-Expert-V5</code></td></tr>
-          <tr><td>Angular search-engine widget or library</td><td><code>Search Engine Expert</code></td></tr>
-          <tr><td>Angular hotel client (<code>hotels-search-page</code>)</td><td><code>WebAgent-Expert-Hotel-Client</code> — plus <code>Search Engine Expert</code> if it touches the embedded widget</td></tr>
-          <tr><td>.NET 10 WebAgent hotel server</td><td><code>WebAgent-Hotel-Server-Expert</code></td></tr>
-          <tr><td>Spans client + server (new API + Angular consumer)</td><td><code>WebAgent-Hotel-Server-Expert</code> first, then <code>WebAgent-Expert-Hotel-Client</code></td></tr>
-          <tr><td>Pure code review request</td><td><code>Code-Reviewer</code> directly — skip delegation</td></tr>
-          <tr><td>Memory / knowledge lookup</td><td><code>Memory-Agent</code> directly, RETRIEVE mode</td></tr>
-          <tr><td>Unsure or multi-domain</td><td><code>Aluf⭐</code> — ask one focused question rather than guess</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
+        <div class="hud table-wrap reveal" style="padding: 6px">
+          <table>
+            <thead>
+              <tr>
+                <th>If the task involves…</th>
+                <th>Route to</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Issta2017.sln, legacy ASP.NET MVC 5 hotel code</td>
+                <td><code>Hotel-Expert-2017</code></td>
+              </tr>
+              <tr>
+                <td>ITS V5, Gimmonix, <code>ITS.Adapters.*</code></td>
+                <td><code>Hotel-Expert-V5</code></td>
+              </tr>
+              <tr>
+                <td>Angular search-engine widget or library</td>
+                <td><code>Search Engine Expert</code></td>
+              </tr>
+              <tr>
+                <td>Angular hotel client (<code>hotels-search-page</code>)</td>
+                <td>
+                  <code>WebAgent-Expert-Hotel-Client</code> — plus
+                  <code>Search Engine Expert</code> if it touches the embedded
+                  widget
+                </td>
+              </tr>
+              <tr>
+                <td>.NET 10 WebAgent hotel server</td>
+                <td><code>WebAgent-Hotel-Server-Expert</code></td>
+              </tr>
+              <tr>
+                <td>Spans client + server (new API + Angular consumer)</td>
+                <td>
+                  <code>WebAgent-Hotel-Server-Expert</code> first, then
+                  <code>WebAgent-Expert-Hotel-Client</code>
+                </td>
+              </tr>
+              <tr>
+                <td>Pure code review request</td>
+                <td><code>Code-Reviewer</code> directly — skip delegation</td>
+              </tr>
+              <tr>
+                <td>Memory / knowledge lookup</td>
+                <td><code>Memory-Agent</code> directly, RETRIEVE mode</td>
+              </tr>
+              <tr>
+                <td>Unsure or multi-domain</td>
+                <td>
+                  <code>Aluf⭐</code> — ask one focused question rather than
+                  guess
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-  <!-- ============ WALKTHROUGH ============ -->
-  <section id="walkthrough">
-    <div class="section-head"><span class="section-num">08</span><h2 class="section-title">A Task, End to End</h2></div>
-    <p class="section-lede">Worked example: <i>“Add a new hotel filter that also needs GA4 tracking.”</i> Domain = hotels + analytics, client-side.</p>
+      <!-- ============ WALKTHROUGH ============ -->
+      <section id="walkthrough">
+        <div class="section-head">
+          <span class="section-num">08</span>
+          <h2 class="section-title">A Task, End to End</h2>
+        </div>
+        <p class="section-lede">
+          Worked example:
+          <i>“Add a new hotel filter that also needs GA4 tracking.”</i> Domain =
+          hotels + analytics, client-side.
+        </p>
 
-    <div class="hud reveal" style="padding:8px 28px">
-      <ol class="flowlist">
-        <li>Developer messages <b>Aluf⭐</b> directly — never a specialist first, per <code>copilot-instructions.md</code> §1.</li>
-        <li>Aluf reads the request: domain <code>hotels</code>, Angular client, touches GA4 → routes to <b>WebAgent-Expert-Hotel-Client</b>.</li>
-        <li>Aluf calls <b>Memory-Agent</b> in <code>RETRIEVE</code> mode: domain <code>hotels</code>, task “new filter + GA4”. Gets back any prior gotchas (e.g. index-based tracking bugs).</li>
-        <li>Aluf delegates to <b>WebAgent-Expert-Hotel-Client</b> with the retrieved insights, instructing it to load <code>issta-stack</code> + <code>angular-patterns</code> + <code>gtm-ga4-tracking</code> from <code>skill-route</code> first.</li>
-        <li>The specialist adds the <code>FilterConfig</code> entry, wires it into <code>HotelFilterService</code>, and pushes the GA4 event per the <code>{ ecommerce: null }</code>-then-push convention.</li>
-        <li>Aluf calls <b>Code-Reviewer</b>, which loads <code>owasp-security</code> + <code>issta-stack</code> and checks the diff — say it flags a 0-based GA4 index.</li>
-        <li>The specialist fixes it directly (no valid challenge here — it's a documented convention) and Code-Reviewer re-reviews only the changed lines.</li>
-        <li>Aluf applies <code>rating-skill</code>: WebAgent-Expert-Hotel-Client scores 4/5 (“minor GA4 index bug, fixed cleanly”), Code-Reviewer 5/5.</li>
-        <li>Aluf calls <b>Memory-Agent</b> in <code>STORE</code> mode with the summary, insight (“GA4 index must be 1-based”), and outcome — new entry, index row, domain bullet, and two ledger rows all written.</li>
-        <li>Aluf returns the structured <b>Task Report</b> to the developer: agents invoked, outcome, memory status — done.</li>
-      </ol>
-    </div>
-  </section>
+        <div class="hud reveal" style="padding: 8px 28px">
+          <ol class="flowlist">
+            <li>
+              Developer messages <b>Aluf⭐</b> directly — never a specialist
+              first, per <code>copilot-instructions.md</code> §1.
+            </li>
+            <li>
+              Aluf reads the request: domain <code>hotels</code>, Angular
+              client, touches GA4 → routes to
+              <b>WebAgent-Expert-Hotel-Client</b>.
+            </li>
+            <li>
+              Aluf calls <b>Memory-Agent</b> in <code>RETRIEVE</code> mode:
+              domain <code>hotels</code>, task “new filter + GA4”. Gets back any
+              prior gotchas (e.g. index-based tracking bugs).
+            </li>
+            <li>
+              Aluf delegates to <b>WebAgent-Expert-Hotel-Client</b> with the
+              retrieved insights, instructing it to load
+              <code>issta-stack</code> + <code>angular-patterns</code> +
+              <code>gtm-ga4-tracking</code> from <code>skill-route</code> first.
+            </li>
+            <li>
+              The specialist adds the <code>FilterConfig</code> entry, wires it
+              into <code>HotelFilterService</code>, and pushes the GA4 event per
+              the <code>{ ecommerce: null }</code>-then-push convention.
+            </li>
+            <li>
+              Aluf calls <b>Code-Reviewer</b>, which loads
+              <code>owasp-security</code> + <code>issta-stack</code> and checks
+              the diff — say it flags a 0-based GA4 index.
+            </li>
+            <li>
+              The specialist fixes it directly (no valid challenge here — it's a
+              documented convention) and Code-Reviewer re-reviews only the
+              changed lines.
+            </li>
+            <li>
+              Aluf invokes <b>Rating-Agent</b> with the full context: task
+              summary, agents + what they produced, Code-Reviewer findings,
+              outcome, and the key insight (<i>“GA4 index must be 1-based”</i>).
+            </li>
+            <li>
+              Rating-Agent reads <code>agent-performance.md</code> for prior
+              scores, then assigns: WebAgent-Expert-Hotel-Client 4/5 (<i
+                >“minor GA4 index bug, fixed cleanly”</i
+              >), Code-Reviewer 5/5. It invokes <b>Memory-Agent</b> in STORE
+              mode — entry, index row, domain bullet, and two ledger rows all
+              written.
+            </li>
+            <li>
+              Gate 5b passes. Aluf writes the structured <b>Task Report</b>:
+              agents invoked with scores, conflicts resolved, Rating-Agent
+              status logged — done.
+            </li>
+          </ol>
+        </div>
+      </section>
+    </main>
 
-</main>
+    <footer>
+      <div class="wrap">
+        <span
+          >Generated for developers extending this workspace. To add an agent:
+          create <code>agents/&lt;Name&gt;.agent.md</code>, register it in
+          <code>copilot-instructions.md</code> §2, and add any new skill to
+          <code>skill-route</code>.</span
+        >
+        <span class="mono"
+          >help-docs/architecture.html · reference snapshot 2026-07-09</span
+        >
+      </div>
+    </footer>
 
-<footer>
-  <div class="wrap">
-    <span>Generated for developers extending this workspace. To add an agent: create <code>agents/&lt;Name&gt;.agent.md</code>, register it in <code>copilot-instructions.md</code> §2, and add any new skill to <code>skill-route</code>.</span>
-    <span class="mono">help-docs/architecture.html · reference snapshot 2026-07-08</span>
-  </div>
-</footer>
-
-<script>
-(function(){
-  "use strict";
-  var svg = document.getElementById('orgsvg');
-  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (reduceMotion) {
-    svg.querySelectorAll('animateMotion').forEach(function(el){ el.remove(); });
-    svg.querySelectorAll('.pulse').forEach(function(el){ el.style.display = 'none'; });
-  }
-
-  var nodes = Array.prototype.slice.call(svg.querySelectorAll('.node'));
-  var skillNodeGroups = Array.prototype.slice.call(svg.querySelectorAll('.skillnode-g'));
-  var memNodeGroups = Array.prototype.slice.call(svg.querySelectorAll('.memnode-g'));
-  var arcs = Array.prototype.slice.call(svg.querySelectorAll('.arc'));
-  var skillLines = Array.prototype.slice.call(svg.querySelectorAll('.skillline'));
-  var memLines = Array.prototype.slice.call(svg.querySelectorAll('.memline'));
-  var readout = document.getElementById('focusreadout');
-  var clearBtn = document.getElementById('clearfocus');
-
-  function allHighlightables(){
-    return nodes.concat(skillNodeGroups, memNodeGroups);
-  }
-
-  function clearFocus(){
-    svg.classList.remove('focused');
-    allHighlightables().forEach(function(n){ n.classList.remove('hl','active'); });
-    arcs.forEach(function(a){ a.classList.remove('hl'); });
-    skillLines.forEach(function(l){ l.classList.remove('hl'); });
-    memLines.forEach(function(l){ l.classList.remove('hl'); });
-    readout.textContent = 'FOCUS: none — click a node to trace it';
-  }
-
-  function focusAgent(id, cardId){
-    clearFocus();
-    svg.classList.add('focused');
-    var self = nodes.find(function(n){ return n.dataset.id === id; });
-    if (self) { self.classList.add('hl','active'); }
-
-    arcs.forEach(function(a){
-      if (a.dataset.agent === id || a.dataset.agent2 === id) {
-        a.classList.add('hl');
-        var otherId = a.dataset.agent === id ? a.dataset.agent2 : a.dataset.agent;
-        if (otherId) {
-          var other = nodes.find(function(n){ return n.dataset.id === otherId; });
-          if (other) other.classList.add('hl');
-        } else {
-          var hub = nodes.find(function(n){ return n.dataset.id === 'aluf'; });
-          if (hub) hub.classList.add('hl');
+    <script>
+      (function () {
+        "use strict";
+        var svg = document.getElementById("orgsvg");
+        var reduceMotion = window.matchMedia(
+          "(prefers-reduced-motion: reduce)",
+        ).matches;
+        if (reduceMotion) {
+          svg.querySelectorAll("animateMotion").forEach(function (el) {
+            el.remove();
+          });
+          svg.querySelectorAll(".pulse").forEach(function (el) {
+            el.style.display = "none";
+          });
         }
-      }
-    });
 
-    skillLines.forEach(function(l){
-      if (l.dataset.agent === id) {
-        l.classList.add('hl');
-        var sk = skillNodeGroups.find(function(s){ return s.dataset.skill === l.dataset.skill; });
-        if (sk) sk.classList.add('hl');
-      }
-    });
+        var nodes = Array.prototype.slice.call(svg.querySelectorAll(".node"));
+        var skillNodeGroups = Array.prototype.slice.call(
+          svg.querySelectorAll(".skillnode-g"),
+        );
+        var memNodeGroups = Array.prototype.slice.call(
+          svg.querySelectorAll(".memnode-g"),
+        );
+        var arcs = Array.prototype.slice.call(svg.querySelectorAll(".arc"));
+        var skillLines = Array.prototype.slice.call(
+          svg.querySelectorAll(".skillline"),
+        );
+        var memLines = Array.prototype.slice.call(
+          svg.querySelectorAll(".memline"),
+        );
+        var readout = document.getElementById("focusreadout");
+        var clearBtn = document.getElementById("clearfocus");
 
-    memLines.forEach(function(l){
-      if (l.dataset.agent === id) {
-        l.classList.add('hl');
-        var mem = memNodeGroups.find(function(m){ return m.dataset.mem === l.dataset.mem; });
-        if (mem) mem.classList.add('hl');
-      }
-    });
+        function allHighlightables() {
+          return nodes.concat(skillNodeGroups, memNodeGroups);
+        }
 
-    readout.textContent = 'FOCUS: ' + id;
+        function clearFocus() {
+          svg.classList.remove("focused");
+          allHighlightables().forEach(function (n) {
+            n.classList.remove("hl", "active");
+          });
+          arcs.forEach(function (a) {
+            a.classList.remove("hl");
+          });
+          skillLines.forEach(function (l) {
+            l.classList.remove("hl");
+          });
+          memLines.forEach(function (l) {
+            l.classList.remove("hl");
+          });
+          readout.textContent = "FOCUS: none — click a node to trace it";
+        }
 
-    if (cardId) {
-      document.querySelectorAll('details.card[open]').forEach(function(d){ if (d.id !== cardId) d.open = false; });
-      var card = document.getElementById(cardId);
-      if (card) {
-        card.open = true;
-        card.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
-      }
-    }
-  }
+        function focusAgent(id, cardId) {
+          clearFocus();
+          svg.classList.add("focused");
+          var self = nodes.find(function (n) {
+            return n.dataset.id === id;
+          });
+          if (self) {
+            self.classList.add("hl", "active");
+          }
 
-  function focusSkill(skillId){
-    clearFocus();
-    svg.classList.add('focused');
-    var self = skillNodeGroups.find(function(s){ return s.dataset.skill === skillId; });
-    if (self) self.classList.add('hl','active');
-    skillLines.forEach(function(l){
-      if (l.dataset.skill === skillId) {
-        l.classList.add('hl');
-        var ag = nodes.find(function(n){ return n.dataset.id === l.dataset.agent; });
-        if (ag) ag.classList.add('hl');
-      }
-    });
-    readout.textContent = 'FOCUS: skill · ' + skillId;
-  }
+          arcs.forEach(function (a) {
+            if (a.dataset.agent === id || a.dataset.agent2 === id) {
+              a.classList.add("hl");
+              var otherId =
+                a.dataset.agent === id ? a.dataset.agent2 : a.dataset.agent;
+              if (otherId) {
+                var other = nodes.find(function (n) {
+                  return n.dataset.id === otherId;
+                });
+                if (other) other.classList.add("hl");
+              } else {
+                var hub = nodes.find(function (n) {
+                  return n.dataset.id === "aluf";
+                });
+                if (hub) hub.classList.add("hl");
+              }
+            }
+          });
 
-  nodes.forEach(function(n){
-    n.addEventListener('click', function(){ focusAgent(n.dataset.id, n.dataset.card); });
-    n.addEventListener('keydown', function(e){
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); focusAgent(n.dataset.id, n.dataset.card); }
-    });
-  });
-  skillNodeGroups.forEach(function(s){
-    s.addEventListener('click', function(){ focusSkill(s.dataset.skill); });
-  });
+          skillLines.forEach(function (l) {
+            if (l.dataset.agent === id) {
+              l.classList.add("hl");
+              var sk = skillNodeGroups.find(function (s) {
+                return s.dataset.skill === l.dataset.skill;
+              });
+              if (sk) sk.classList.add("hl");
+            }
+          });
 
-  clearBtn.addEventListener('click', clearFocus);
+          memLines.forEach(function (l) {
+            if (l.dataset.agent === id) {
+              l.classList.add("hl");
+              var mem = memNodeGroups.find(function (m) {
+                return m.dataset.mem === l.dataset.mem;
+              });
+              if (mem) mem.classList.add("hl");
+            }
+          });
 
-  document.querySelectorAll('details.card').forEach(function(card){
-    card.addEventListener('toggle', function(){
-      if (card.open) {
-        clearFocus();
-        var id = card.id.replace('card-', '');
-        var n = nodes.find(function(nn){ return nn.dataset.id === id; });
-        if (n) { svg.classList.add('focused'); n.classList.add('hl','active'); readout.textContent = 'FOCUS: ' + id; }
-      }
-    });
-  });
+          readout.textContent = "FOCUS: " + id;
 
-  // scroll reveal
-  if ('IntersectionObserver' in window && !reduceMotion) {
-    var io = new IntersectionObserver(function(entries){
-      entries.forEach(function(e){ if (e.isIntersecting) { e.target.classList.add('in-view'); io.unobserve(e.target); } });
-    }, { threshold: 0.12 });
-    document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
-  } else {
-    document.querySelectorAll('.reveal').forEach(function(el){ el.classList.add('in-view'); });
-  }
-})();
-</script>
-</body>
+          if (cardId) {
+            document
+              .querySelectorAll("details.card[open]")
+              .forEach(function (d) {
+                if (d.id !== cardId) d.open = false;
+              });
+            var card = document.getElementById(cardId);
+            if (card) {
+              card.open = true;
+              card.scrollIntoView({
+                behavior: reduceMotion ? "auto" : "smooth",
+                block: "center",
+              });
+            }
+          }
+        }
+
+        function focusSkill(skillId) {
+          clearFocus();
+          svg.classList.add("focused");
+          var self = skillNodeGroups.find(function (s) {
+            return s.dataset.skill === skillId;
+          });
+          if (self) self.classList.add("hl", "active");
+          skillLines.forEach(function (l) {
+            if (l.dataset.skill === skillId) {
+              l.classList.add("hl");
+              var ag = nodes.find(function (n) {
+                return n.dataset.id === l.dataset.agent;
+              });
+              if (ag) ag.classList.add("hl");
+            }
+          });
+          readout.textContent = "FOCUS: skill · " + skillId;
+        }
+
+        nodes.forEach(function (n) {
+          n.addEventListener("click", function () {
+            focusAgent(n.dataset.id, n.dataset.card);
+          });
+          n.addEventListener("keydown", function (e) {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              focusAgent(n.dataset.id, n.dataset.card);
+            }
+          });
+        });
+        skillNodeGroups.forEach(function (s) {
+          s.addEventListener("click", function () {
+            focusSkill(s.dataset.skill);
+          });
+        });
+
+        clearBtn.addEventListener("click", clearFocus);
+
+        document.querySelectorAll("details.card").forEach(function (card) {
+          card.addEventListener("toggle", function () {
+            if (card.open) {
+              clearFocus();
+              var id = card.id.replace("card-", "");
+              var n = nodes.find(function (nn) {
+                return nn.dataset.id === id;
+              });
+              if (n) {
+                svg.classList.add("focused");
+                n.classList.add("hl", "active");
+                readout.textContent = "FOCUS: " + id;
+              }
+            }
+          });
+        });
+
+        // scroll reveal
+        if ("IntersectionObserver" in window && !reduceMotion) {
+          var io = new IntersectionObserver(
+            function (entries) {
+              entries.forEach(function (e) {
+                if (e.isIntersecting) {
+                  e.target.classList.add("in-view");
+                  io.unobserve(e.target);
+                }
+              });
+            },
+            { threshold: 0.12 },
+          );
+          document.querySelectorAll(".reveal").forEach(function (el) {
+            io.observe(el);
+          });
+        } else {
+          document.querySelectorAll(".reveal").forEach(function (el) {
+            el.classList.add("in-view");
+          });
+        }
+      })();
+    </script>
+  </body>
 </html>

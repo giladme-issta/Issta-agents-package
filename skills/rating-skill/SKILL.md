@@ -1,18 +1,18 @@
 ---
 name: rating-skill
-description: "Agent performance rating system. Aluf⭐-only. Use after every completed task to score each invoked agent, record the rating in the Agent Performance Ledger, and generate the task's final performance report."
+description: "Agent performance rating system. Rating-Agent-only. Use after every completed task to score each invoked agent, record the rating in the Agent Performance Ledger, and generate the task's final performance report."
 argument-hint: "List the agents involved, their actions, and the task outcome"
 ---
 
 # Rating Skill — Agent Performance Evaluation
 
-**This skill is exclusively for Aluf⭐.** No other agent should load or apply it.
+**This skill is exclusively for Rating-Agent.** No other agent should load or apply it.
 
 ---
 
 ## 1. When to Rate
 
-Rate agents at **Step 5 (Memory Store)** of every completed task — after all corrections are applied and the code review is passed (or dismissed with reasoning). One score per agent per task.
+Rate agents at **Step 1** of every Rating-Agent session — after all corrections are applied and the code review is passed (or dismissed with reasoning). One score per agent per task.
 
 ---
 

@@ -23,7 +23,7 @@ All skills live at: `c:\Users\giladme\.copilot\skills\`
 | **memory-structure**  | `c:\Users\giladme\.copilot\skills\memory-structure\SKILL.md`  | Memory system layout, entry/domain/index file formats, and the agent rating ledger format                                     | Memory-Agent                                       |
 | **gtm-ga4-tracking**  | `c:\Users\giladme\.copilot\skills\gtm-ga4-tracking\SKILL.md`  | GTM data layer push patterns, GA4 event structure, Issta product event naming conventions                                     | Hotel-Expert-2017, WebAgent-Expert-Hotel-Client    |
 | **gimmonix-adapter**  | `c:\Users\giladme\.copilot\skills\gimmonix-adapter\SKILL.md`  | Gimmonix adapter patterns: search/book/cancel contracts, supplier mapping, CUG prices, error handling                         | Hotel-Expert-V5                                    |
-| **rating-skill**      | `c:\Users\giladme\.copilot\skills\rating-skill\SKILL.md`      | Agent performance rating: scoring criteria, scale (1–5), report format, ledger maintenance. **Aluf⭐ only.**                  | Aluf⭐                                             |
+| **rating-skill**      | `c:\Users\giladme\.copilot\skills\rating-skill\SKILL.md`      | Agent performance rating: scoring criteria, scale (1–5), report format, ledger maintenance. **Rating-Agent only.**            | Rating-Agent                                       |
 
 ---
 
