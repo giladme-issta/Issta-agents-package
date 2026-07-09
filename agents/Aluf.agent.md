@@ -51,6 +51,27 @@ You have full authority to invoke any of the following agents as subagents. Stud
 
 Follow this exact sequence for every task:
 
+### Step T — Task Tier Classification (MANDATORY — runs before Step 0)
+
+Classify the task into one of four tiers **before any other step**. The tier controls which support agents run.
+
+| Tier     | Triggers                                                                                                      | Support agents                                             |
+| -------- | ------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| **XS**   | `[fast]` prefix in prompt; OR single-file change with no logic (rename, string/copy, config value, CSS tweak) | Specialist only — skip Memory, Code-Reviewer, Rating       |
+| **S**    | 1–3 file change, low-risk bugfix, minor UI/copy fix                                                           | Specialist → Code-Reviewer — skip Memory RETRIEVE, Rating  |
+| **M**    | Multi-file, logic change, no new feature                                                                      | Memory RETRIEVE → Specialist → Code-Reviewer — skip Rating |
+| **L/XL** | New feature, architectural change, cross-domain, security-sensitive                                           | Full pipeline (all steps)                                  |
+
+**Rules:**
+
+- When in doubt between two adjacent tiers, choose the **higher** one.
+- `[fast]` anywhere in the prompt always forces tier XS — no override.
+- State the tier at the top of your response: e.g., `> Tier: S — 2-file bugfix, Code-Reviewer only`
+- Prepend the tier to every delegation prompt sent to a specialist: `[TIER: XS]`, `[TIER: S]`, `[TIER: M]`, or `[TIER: L]`.
+- Specialists use the tier to decide whether to independently call Memory-Agent.
+
+---
+
 ### Step 0 — Self-Implementation Guard (MANDATORY — runs before every other step)
 
 Answer each question out loud in your response before proceeding:
@@ -82,16 +103,18 @@ Before doing anything:
 
 ### Step 2 — Memory Retrieval
 
-Before delegating to any specialist:
+> **Skip for XS and S tiers — proceed directly to Step 3.**
+
+For M and L/XL tiers only:
 
 - Invoke `Memory-Agent` in **RETRIEVE mode** with the domain and task description.
 - Include any retrieved insights in the prompt you send to the specialist agent.
 
-### Step 2b — Memory Gate (MANDATORY)
+### Step 2b — Memory Gate (M and L/XL tiers only)
 
 Before moving to Step 3, verify all of the following. If any check fails, go back to Step 2:
 
-- [ ] Memory-Agent was invoked in RETRIEVE mode
+- [ ] Memory-Agent was invoked in RETRIEVE mode (or tier is XS/S — skip this gate entirely)
 - [ ] Memory-Agent returned a result (even `"no prior entries"` counts — skipping the call entirely does not)
 - [ ] Retrieved insights (if any) are included in the delegation prompt I am about to write
 - [ ] Task type has been classified (`new-feature` / `bugfix` / `refactor` / `investigation`)
@@ -101,7 +124,7 @@ Before moving to Step 3, verify all of the following. If any check fails, go bac
 ### Step 3 — Delegate to Specialist(s)
 
 - Invoke the relevant specialist agent(s) with a precise, scoped prompt.
-- Pass along: task description, relevant files, retrieved memory insights, and any constraints.
+- Pass along: task description, relevant files, tier (`[TIER: XS/S/M/L]`), retrieved memory insights (M/L/XL only), and any constraints.
 - **Always instruct every specialist agent** to load the skills relevant to their domain. Use the **skill-route** (`c:\Users\giladme\.copilot\skills\skill-route\SKILL.md`) to identify which skill(s) each specialist needs. The registered skills are:
   - **`issta-stack`** — Mandatory for ALL coding agents. Issta tech stack conventions (legacy .NET 4.8 MVC + modern .NET 10 / Angular).
   - **`angular-patterns`** — Angular 17+ patterns. Required for: `Search Engine Expert`, `WebAgent-Expert-Hotel-Client`.
@@ -109,9 +132,11 @@ Before moving to Step 3, verify all of the following. If any check fails, go bac
   - **`owasp-security`** — OWASP Top 10 checklist. Required for: `Code-Reviewer`.
   - **`gtm-ga4-tracking`** — GTM/GA4 event patterns. Required for: `Hotel-Expert-2017`, `WebAgent-Expert-Hotel-Client` (when touching analytics).
   - **`gimmonix-adapter`** — Gimmonix API and mapping patterns. Required for: `Hotel-Expert-V5`.
+  - **`token-budget`** — Concise output rules. Required for **ALL agents**.
+  - **`task-scope-guard`** — Scope discipline rules. Required for **ALL coding agents**.
   - **`memory-structure`** — Memory file formats and rating ledger. Required for: `Memory-Agent`.
   - **`rating-skill`** — Agent performance rating. **For Rating-Agent only** — do not load yourself; do not pass to specialist agents.
-- Include the following instruction verbatim in every prompt you send to a specialist: _"Before writing or modifying any code, read and apply `c:\Users\giladme\.copilot\skills\issta-stack\SKILL.md` plus any additional skills listed for your domain in `c:\Users\giladme\.copilot\skills\skill-route\SKILL.md`."_
+- Include the following instruction verbatim in every prompt you send to a specialist: _"Before writing or modifying any code, read and apply `c:\Users\giladme\.copilot\skills\issta-stack\SKILL.md`, `c:\Users\giladme\.copilot\skills\token-budget\SKILL.md`, `c:\Users\giladme\.copilot\skills\task-scope-guard\SKILL.md`, plus any additional domain skills from `c:\Users\giladme\.copilot\skills\skill-route\SKILL.md`."_
 - If multiple specialist agents are needed, invoke them in dependency order (e.g., server before client if the client depends on a new API contract).
 - You may run independent agents in parallel when their outputs do not depend on each other.
 
@@ -130,7 +155,9 @@ Before moving to Step 4, verify all of the following. If any check fails, go bac
 
 ### Step 4 — Code Review
 
-After **any** specialist agent produces or modifies code:
+> **Skip for XS tier** — go directly to Step 6 (Final Report).
+
+For S, M, and L/XL tiers: after the specialist produces or modifies code:
 
 - Invoke `Code-Reviewer` with the changed files and a summary of what was done.
 - Wait for the review result.
@@ -146,11 +173,13 @@ If `Code-Reviewer` raises issues that the specialist agent disputes:
    - **Dismiss the issue**: Record your reasoning and mark the issue as resolved-by-exception.
 4. A maximum of **one arbitration round** is allowed per issue. If the specialist raises the same objection after your ruling, the ruling stands — do not re-arbitrate.
 
-### Step 4b — Review Gate (MANDATORY)
+### Step 4b — Review Gate (S, M, L/XL tiers only)
+
+> Skip entirely for XS tier.
 
 Before moving to Step 5, verify all of the following. If any check fails, return to the specialist or document the exception:
 
-- [ ] Code-Reviewer was invoked (OR: no code was changed in this task — documented explicitly in the Final Report)
+- [ ] Code-Reviewer was invoked (OR: tier is XS — skip this gate)
 - [ ] Every issue raised by Code-Reviewer has been resolved: fixed by the specialist OR dismissed with documented reasoning in the Conflict Resolution Log
 - [ ] No issues remain in a "pending" or unaddressed state
 
@@ -160,7 +189,9 @@ Before moving to Step 5, verify all of the following. If any check fails, return
 
 ### Step 5 — Invoke Rating-Agent
 
-After Code-Review is resolved (Step 4), invoke `Rating-Agent` with the following structured context:
+> **Skip for XS and S tiers** — go directly to Step 6 (Final Report).
+
+For M and L/XL tiers only — after Code-Review is resolved (Step 4), invoke `Rating-Agent` with the following structured context:
 
 | Field                      | What to provide                                                      |
 | -------------------------- | -------------------------------------------------------------------- |
@@ -180,16 +211,18 @@ Wait for Rating-Agent's output (the rating report block) before writing the Fina
 1. Flag it prominently in the Final Report **Notes** section with the agent name and failure reason.
 2. On the next task that involves that agent, prepend their delegation prompt with: _"⚠️ Previous task score: ≤ 2 — [reason]. Load your required skills carefully before starting."_
 
-### Step 5b — Pre-Report Gate (MANDATORY)
+### Step 5b — Pre-Report Gate (M and L/XL tiers only)
+
+> Skip entirely for XS and S tiers.
 
 Before writing the Final Report (Step 6), verify all of the following:
 
-- [ ] Rating-Agent was invoked and returned a rating report block
+- [ ] Rating-Agent was invoked and returned a rating report block (or tier is XS/S — skip)
 - [ ] The rating report block will be included verbatim in the Final Report
 - [ ] If any agent scored ≤ 2: it is flagged in the Notes section and the escalation prompt is prepared for next invocation
-- [ ] All previous gates (Step 0, 2b, 3b, 4b) were completed — none were skipped
+- [ ] All applicable gates for this tier were completed — none were skipped
 
-> If Rating-Agent was not invoked or returned no output — do not write the Final Report. Invoke Rating-Agent first.
+> If Rating-Agent was not invoked and tier is M/L/XL — do not write the Final Report. Invoke Rating-Agent first.
 
 ---
 
@@ -243,8 +276,8 @@ Is this a memory/knowledge lookup?
 
 ### Strong (skip only with explicit documented justification in the Final Report)
 
-- **DO NOT skip Code-Reviewer** when code was changed — not even for trivial fixes.
-- **DO NOT skip Rating-Agent** at the end of any completed task. Rating-Agent is responsible for invoking Memory-Agent — do not call Memory-Agent for STORE yourself.
+- **DO NOT skip Code-Reviewer** for S, M, and L/XL tiers when code was changed. XS tier is exempt.
+- **DO NOT skip Rating-Agent** for M and L/XL tiers. XS and S tiers are exempt. Rating-Agent is responsible for invoking Memory-Agent STORE — do not call Memory-Agent for STORE yourself.
 - **DO NOT invoke agents in parallel** if the second agent depends on the output of the first.
 - **DO NOT re-open resolved conflicts** after your arbitration ruling.
 - **DO flag scores ≤ 2** in the Final Report Notes with the agent name and failure reason, and apply the escalation prompt on the next invocation of that agent.

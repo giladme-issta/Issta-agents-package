@@ -10,7 +10,7 @@ This workspace (`c:\Users\giladme\.copilot`) is the **central agent, skill, and 
 
 - Do not implement code directly when an agent is available.
 - Do not invoke specialist agents without first going through Aluf⭐, unless you have been explicitly told to invoke a specialist directly.
-- Aluf⭐ handles: task analysis → memory retrieval → specialist delegation → code review → rating delegation → final report.
+- Aluf⭐ uses a **task tier system** to scale the pipeline to the task size (see Section 7 below).
 - Agent file: `c:\Users\giladme\.copilot\agents\Aluf.agent.md`
 
 ---
@@ -39,6 +39,8 @@ Every specialist agent has a **Before You Begin** block in its own file that lis
 | Skill               | Required for                                                      |
 | ------------------- | ----------------------------------------------------------------- |
 | `issta-stack`       | **ALL** coding agents — mandatory without exception               |
+| `token-budget`      | **ALL** agents — mandatory without exception                      |
+| `task-scope-guard`  | **ALL** coding agents — mandatory without exception               |
 | `angular-patterns`  | Search Engine Expert, WebAgent-Expert-Hotel-Client                |
 | `dotnet-clean-arch` | WebAgent-Hotel-Server-Expert, Hotel-Expert-V5                     |
 | `owasp-security`    | Code-Reviewer                                                     |
@@ -54,18 +56,17 @@ Master routing guide: `c:\Users\giladme\.copilot\skills\skill-route\SKILL.md`
 
 ## 4. Memory Lifecycle
 
-- **Before** starting any specialist task → invoke `Memory-Agent` in **RETRIEVE mode** with the domain and task description.
-- **After** completing any task → invoke `Memory-Agent` in **STORE mode** with a summary of what was done and what was learned.
+- Memory RETRIEVE runs for **M and L/XL tier tasks only** (see Section 7).
+- Memory STORE runs for **M and L/XL tier tasks only**, via Rating-Agent.
 - Memory files live in: `c:\Users\giladme\.copilot\memory\`
 
 ---
 
-## 5. Code Review Is Non-Negotiable
+## 5. Code Review Is Tier-Conditional
 
-After **any** agent produces or modifies code:
-
-- Invoke `Code-Reviewer` with the changed files and a brief description of what was done.
-- The reviewer's findings must be addressed or explicitly challenged and resolved before the work is accepted.
+- **XS tier**: Code-Reviewer is skipped.
+- **S, M, L/XL tiers**: Code-Reviewer runs after every code change.
+- The reviewer's findings must be addressed or dismissed before the work is accepted.
 
 ---
 
@@ -78,7 +79,29 @@ Angular search widget/lib?    → Search Engine Expert
 Angular hotel results page?   → WebAgent-Expert-Hotel-Client
 .NET 10 hotel server?         → WebAgent-Hotel-Server-Expert
 New API + Angular consumer?   → WebAgent-Hotel-Server-Expert first, then WebAgent-Expert-Hotel-Client
-Pure code review?             → Code-Reviewer directly
-Memory store/retrieve?        → Memory-Agent directly
-Unsure / multi-domain?        → Aluf⭐
+
+---
+
+## 7. Task Tier System
+
+Aluf⭐ classifies every task into a tier at the start of each response. The tier controls which support agents run:
+
+| Tier | When to use | Pipeline |
+|------|-------------|----------|
+| **XS** | `[fast]` prefix in your prompt; OR single-file rename/string/config/CSS change | Specialist only |
+| **S** | 1–3 file low-risk bugfix or minor UI tweak | Specialist → Code-Reviewer |
+| **M** | Multi-file logic change, no new feature | Memory RETRIEVE → Specialist → Code-Reviewer |
+| **L/XL** | New feature, architectural change, cross-domain | Full pipeline |
+
+**Quick tip**: Prefix your prompt with `[fast]` for small tasks to skip Memory, Rating-Agent, and Code-Reviewer automatically.
+
+Example: `[fast] change the error message on HotelsController line 42`
+```
+
+Pure code review? → Code-Reviewer directly
+Memory store/retrieve? → Memory-Agent directly
+Unsure / multi-domain? → Aluf⭐
+
+```
+
 ```

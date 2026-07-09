@@ -12,9 +12,11 @@ agents: ["Search Engine Expert"]
 
 1. **Load required skills** — read and apply before writing or modifying any code:
    - `c:\Users\giladme\.copilot\skills\issta-stack\SKILL.md` _(mandatory)_
+   - `c:\Users\giladme\.copilot\skills\token-budget\SKILL.md` _(mandatory — concise output rules)_
+   - `c:\Users\giladme\.copilot\skills\task-scope-guard\SKILL.md` _(mandatory — scope discipline)_
    - `c:\Users\giladme\.copilot\skills\angular-patterns\SKILL.md`
    - `c:\Users\giladme\.copilot\skills\gtm-ga4-tracking\SKILL.md` _(if the task touches GA4 events)_
-2. **Retrieve memory** — invoke `Memory-Agent` in **RETRIEVE mode** with domain `hotels` and a one-line description of the current task. Apply any retrieved insights before proceeding.
+2. **Retrieve memory** — only if the delegation prompt from Aluf does **not** already include retrieved memory insights, OR if you were invoked directly (not via Aluf⭐): invoke `Memory-Agent` in **RETRIEVE mode** with domain `hotels` and a one-line description of the current task.
 
 ---
 
