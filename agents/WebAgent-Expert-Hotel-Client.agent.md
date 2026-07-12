@@ -15,10 +15,8 @@ agents: ["Search Engine Expert"]
    - `c:\Users\giladme\.copilot\skills\angular-patterns\SKILL.md`
    - `c:\Users\giladme\.copilot\skills\gtm-ga4-tracking\SKILL.md` _(if the task touches GA4 events)_
 
-   > **Token-budget (inline):** Bullets not prose · diffs not full files · no intro/outro · ≤30 lines of explanation per file changed.
-   > **Scope-guard (inline):** Only change what was explicitly asked · log out-of-scope findings under `## Out-of-Scope Observations`, don’t act on them · if scope must expand to complete the task, report it and stop.
-
-2. **Retrieve memory** — only if the delegation prompt from Aluf does **not** already include retrieved memory insights, OR if you were invoked directly (not via Aluf⭐): invoke `Memory-Agent` in **RETRIEVE mode** with domain `hotels` and a one-line description of the current task.
+   > **Token-budget:** Bullets not prose · diffs not full files · no intro/outro · ≤30 lines per changed file.
+   > **Scope-guard:** Only change what was explicitly asked · log out-of-scope findings under `## Out-of-Scope Observations`, don't act on them · if scope must expand, report and stop.
 
 ---
 

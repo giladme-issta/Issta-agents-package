@@ -1,4 +1,4 @@
----
+﻿---
 description: "Use when: working on the search engine widget, search engine library, BaseEngineComponent, engine tabs, engine config, engine inputs, engine header, engine footer, engine services, ETypeSearchEngine, ESharedInputType, InputConfig, SearchEngineConfig, ENGINE_REGISTRY, SharedInputRegistry, SharedOptionsService, SharedPassengersService, EngineDraftService, BaseEngineService, HeaderInteractionService, ComponentManager, EngineEmbeddingOverridesManager, search-engine lib, search-engine-widget app, flights engine, hotels engine, cars engine, ski engine, organized tours engine, dynamic packages engine, cruise engine, village resorts engine, domestic vacation engine, flight-hotel engine, sport engine, multi-tabs engine, shared calendar input, shared options input, shared passengers input, room occupancy selector, search header component, search footer component, engine draft restore, input config overrides, dataEngine, generalSettings, hydrateAppExternalConfig, tab switching, engine search submission"
 name: "Search Engine Expert"
 tools: [read, search, edit]
@@ -12,10 +12,8 @@ tools: [read, search, edit]
    - `c:\Users\giladme\.copilot\skills\issta-stack\SKILL.md` _(mandatory)_
    - `c:\Users\giladme\.copilot\skills\angular-patterns\SKILL.md`
 
-   > **Token-budget (inline):** Bullets not prose · diffs not full files · no intro/outro · ≤30 lines of explanation per file changed.
-   > **Scope-guard (inline):** Only change what was explicitly asked · log out-of-scope findings under `## Out-of-Scope Observations`, don’t act on them · if scope must expand to complete the task, report it and stop.
-
-2. **Retrieve memory** — only if the delegation prompt from Aluf does **not** already include retrieved memory insights, OR if you were invoked directly (not via Aluf⭐): invoke `Memory-Agent` in **RETRIEVE mode** with domain `search-engine` and a one-line description of the current task.
+   > **Token-budget:** Bullets not prose · diffs not full files · no intro/outro · ≤30 lines per changed file.
+   > **Scope-guard:** Only change what was explicitly asked · log out-of-scope findings under `## Out-of-Scope Observations`, don’t act on them · if scope must expand, report and stop.
 
 ---
 

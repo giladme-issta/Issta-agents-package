@@ -1,4 +1,4 @@
----
+﻿---
 name: "Hotel-Expert-V5"
 description: >
   Use when: working on international hotels, Gimmonix adapter, hotel search/details/book/cancellation
@@ -18,10 +18,8 @@ tools: [read, search, edit]
    - `c:\Users\giladme\.copilot\skills\dotnet-clean-arch\SKILL.md`
    - `c:\Users\giladme\.copilot\skills\gimmonix-adapter\SKILL.md`
 
-   > **Token-budget (inline):** Bullets not prose · diffs not full files · no intro/outro · ≤30 lines of explanation per file changed.
-   > **Scope-guard (inline):** Only change what was explicitly asked · log out-of-scope findings under `## Out-of-Scope Observations`, don’t act on them · if scope must expand to complete the task, report it and stop.
-
-2. **Retrieve memory** — only if the delegation prompt from Aluf does **not** already include retrieved memory insights, OR if you were invoked directly (not via Aluf⭐): invoke `Memory-Agent` in **RETRIEVE mode** with domain `hotels` and a one-line description of the current task.
+   > **Token-budget:** Bullets not prose · diffs not full files · no intro/outro · ≤30 lines per changed file.
+   > **Scope-guard:** Only change what was explicitly asked · log out-of-scope findings under `## Out-of-Scope Observations`, don’t act on them · if scope must expand, report and stop.
 
 ---
 

@@ -1,4 +1,4 @@
----
+﻿---
 description: "Use when: working on hotel search, hotel results, hotel filtering, hotel selection, hotel booking flow, HotelsController, HotelsManager, HotelsBL, HotelResultMapper, HotelFilterService, HotelSearchRequest, HotelResultDto, HotelItem, GimmonixSupplierFullResults, GimmonixPopularHotelsPriceSupplier, PopularHotelsStaticSupplier, ReplaceResultMergeStrategy, BNPL, CUG price, hotel session, hotel cache, hotel suppliers, hotel domain entities, hotel DI registration, hotel Workers wiring, hotel validation, hotel promotions, hotel pax/rooms mapping"
 name: "WebAgent-Hotel-Server-Expert"
 tools: [read, search, edit, execute]
@@ -13,10 +13,8 @@ model: "Claude Sonnet 4.5 (copilot)"
    - `c:\Users\giladme\.copilot\skills\issta-stack\SKILL.md` _(mandatory)_
    - `c:\Users\giladme\.copilot\skills\dotnet-clean-arch\SKILL.md`
 
-   > **Token-budget (inline):** Bullets not prose · diffs not full files · no intro/outro · ≤30 lines of explanation per file changed.
-   > **Scope-guard (inline):** Only change what was explicitly asked · log out-of-scope findings under `## Out-of-Scope Observations`, don’t act on them · if scope must expand to complete the task, report it and stop.
-
-2. **Retrieve memory** — only if the delegation prompt from Aluf does **not** already include retrieved memory insights, OR if you were invoked directly (not via Aluf⭐): invoke `Memory-Agent` in **RETRIEVE mode** with domain `hotels` and a one-line description of the current task.
+   > **Token-budget:** Bullets not prose · diffs not full files · no intro/outro · ≤30 lines per changed file.
+   > **Scope-guard:** Only change what was explicitly asked · log out-of-scope findings under `## Out-of-Scope Observations`, don’t act on them · if scope must expand, report and stop.
 
 ---
 

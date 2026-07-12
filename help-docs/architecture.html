@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -1829,10 +1829,14 @@
             <div class="card-body">
               <h5>Role</h5>
               <p>
-                The developer talks exclusively to Aluf. It never writes code —
-                it analyzes the task, retrieves memory, delegates to
-                specialists, enforces Code-Reviewer, rates every agent, stores
-                the outcome, and always closes with a structured report.
+                Routes every task to the right specialist agent(s) &mdash; never
+                writes code itself. Uses <b>Direct mode</b> by default
+                (identify domain &rarr; delegate &rarr; return result), or
+                <b>Full mode</b> when the task needs memory retrieval, code
+                review, and performance rating. Prefix your prompt with
+                <code>[full]</code> to force Full mode; Aluf also
+                auto-escalates for multi-domain, architectural, or
+                security-sensitive tasks.
               </p>
               <h5>Tools</h5>
               <div class="badges">
@@ -2199,10 +2203,11 @@
             <div class="card-body">
               <h5>Modes</h5>
               <p>
-                <b>RETRIEVE</b> — invoked by Aluf⭐ before any specialist is
-                called. Surfaces prior insights and gotchas for the specialist
-                prompt. Read-only.<br /><b>STORE</b> — invoked by Rating-Agent
-                after every completed task. Writes the structured entry, appends
+                <b>RETRIEVE</b> — invoked by Aluf⭐ in Full mode before the
+                specialist is called. Surfaces prior insights and gotchas for
+                the specialist prompt. Read-only. Not called in Direct
+                mode.<br /><b>STORE</b> — invoked by Rating-Agent after every
+                Full-mode completed task. Writes the structured entry, appends
                 one row to <code>index.md</code>, updates the domain file, and
                 extends the performance ledger.
               </p>
@@ -2618,66 +2623,78 @@
           <h2 class="section-title">A Task, End to End</h2>
         </div>
         <p class="section-lede">
-          Worked example:
-          <i>“Add a new hotel filter that also needs GA4 tracking.”</i> Domain =
-          hotels + analytics, client-side.
+          Two worked examples using the same task:
+          <i>"Add a new hotel filter that also needs GA4 tracking."</i>
+          The first shows Direct mode (default). The second shows what changes
+          when the developer prefixes with <code class="mono">[full]</code>.
         </p>
 
-        <div class="hud reveal" style="padding: 8px 28px">
-          <ol class="flowlist">
-            <li>
-              Developer messages <b>Aluf⭐</b> directly — never a specialist
-              first, per <code>copilot-instructions.md</code> §1.
-            </li>
-            <li>
-              Aluf reads the request: domain <code>hotels</code>, Angular
-              client, touches GA4 → routes to
-              <b>WebAgent-Expert-Hotel-Client</b>.
-            </li>
-            <li>
-              Aluf calls <b>Memory-Agent</b> in <code>RETRIEVE</code> mode:
-              domain <code>hotels</code>, task “new filter + GA4”. Gets back any
-              prior gotchas (e.g. index-based tracking bugs).
-            </li>
-            <li>
-              Aluf delegates to <b>WebAgent-Expert-Hotel-Client</b> with the
-              retrieved insights, instructing it to load
-              <code>issta-stack</code> + <code>angular-patterns</code> +
-              <code>gtm-ga4-tracking</code> from <code>skill-route</code> first.
-            </li>
-            <li>
-              The specialist adds the <code>FilterConfig</code> entry, wires it
-              into <code>HotelFilterService</code>, and pushes the GA4 event per
-              the <code>{ ecommerce: null }</code>-then-push convention.
-            </li>
-            <li>
-              Aluf calls <b>Code-Reviewer</b>, which loads
-              <code>owasp-security</code> + <code>issta-stack</code> and checks
-              the diff — say it flags a 0-based GA4 index.
-            </li>
-            <li>
-              The specialist fixes it directly (no valid challenge here — it's a
-              documented convention) and Code-Reviewer re-reviews only the
-              changed lines.
-            </li>
-            <li>
-              Aluf invokes <b>Rating-Agent</b> with the full context: task
-              summary, agents + what they produced, Code-Reviewer findings,
-              outcome, and the key insight (<i>“GA4 index must be 1-based”</i>).
-            </li>
-            <li>
-              Rating-Agent reads <code>agent-performance.md</code> for prior
-              scores, then assigns: WebAgent-Expert-Hotel-Client 4/5 (<i
-                >“minor GA4 index bug, fixed cleanly”</i
-              >), Code-Reviewer 5/5. It invokes <b>Memory-Agent</b> in STORE
-              mode — entry, index row, domain bullet, and two ledger rows all
-              written.
-            </li>
-            <li>
-              Gate 5b passes. Aluf writes the structured <b>Task Report</b>:
-              agents invoked with scores, conflicts resolved, Rating-Agent
-              status logged — done.
-            </li>
+        <div style="margin-bottom: 28px;">
+          <p style="font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cyan); margin: 0 0 12px;">Direct Mode &mdash; default path</p>
+          <div class="hud reveal" style="padding: 8px 28px">
+            <ol class="flowlist">
+              <li>
+                Developer types: <code>@Aluf&#x2B50; add a new hotel filter with GA4 tracking</code>
+                &mdash; or goes direct to the specialist:
+                <code>@WebAgent-Expert-Hotel-Client add a new hotel filter with GA4 tracking</code>.
+              </li>
+              <li>
+                Aluf identifies: domain = <code>hotels</code>, Angular client,
+                single specialist &rarr; <b>Direct mode</b>. Delegates to
+                <b>WebAgent-Expert-Hotel-Client</b> with task type <code>feature</code>.
+              </li>
+              <li>
+                The specialist loads <code>issta-stack</code> + <code>angular-patterns</code> +
+                <code>gtm-ga4-tracking</code>, adds the <code>FilterConfig</code> entry,
+                wires it into <code>HotelFilterService</code>, and pushes the GA4 event per
+                the <code>{ ecommerce: null }</code>-then-push convention.
+              </li>
+              <li>
+                Aluf returns the specialist output with a one-line status.
+                Done &mdash; no memory retrieve, no code review, no rating.
+              </li>
+            </ol>
+          </div>
+        </div>
+
+        <div>
+          <p style="font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--amber); margin: 0 0 12px;">Full Mode &mdash; with [full] prefix</p>
+          <p style="font-size: 13px; color: var(--paper-faint); margin: 0 0 14px;">
+            Developer types: <code class="mono">@Aluf&#x2B50; [full] add a new hotel filter with GA4 tracking</code>
+          </p>
+          <div class="hud reveal" style="padding: 8px 28px">
+            <ol class="flowlist">
+              <li>
+                Aluf detects <code>[full]</code> &rarr; Full mode. Calls <b>Memory-Agent</b>
+                (RETRIEVE): domain <code>hotels</code>, task "new filter + GA4". Gets back
+                any prior gotchas (e.g. 0-based GA4 index bug).
+              </li>
+              <li>
+                Aluf delegates to <b>WebAgent-Expert-Hotel-Client</b> with the retrieved
+                insights, instructing it to load <code>issta-stack</code> +
+                <code>angular-patterns</code> + <code>gtm-ga4-tracking</code> first.
+              </li>
+              <li>
+                Specialist implements <code>FilterConfig</code> + <code>HotelFilterService</code>
+                + GA4 push &mdash; already aware of the 1-based index rule from retrieved memory.
+              </li>
+              <li>
+                Aluf calls <b>Code-Reviewer</b> (loads <code>owasp-security</code> +
+                <code>issta-stack</code>). No issues found &mdash; memory prevented the
+                GA4 bug this time.
+              </li>
+              <li>
+                Aluf invokes <b>Rating-Agent</b>: specialist 5/5, Code-Reviewer 5/5.
+                Rating-Agent invokes <b>Memory-Agent</b> (STORE) &mdash; entry, index row,
+                domain bullet, two ledger rows written.
+              </li>
+              <li>
+                Aluf writes the structured <b>Task Report</b> with agents, memory retrieved,
+                and outcome. Done.
+              </li>
+            </ol>
+          </div>
+        </div>
           </ol>
         </div>
       </section>
@@ -2692,7 +2709,7 @@
           <code>skill-route</code>.</span
         >
         <span class="mono"
-          >help-docs/architecture.html · reference snapshot 2026-07-09</span
+          >help-docs/architecture.html &middot; reference snapshot 2026-07-12</span
         >
       </div>
     </footer>

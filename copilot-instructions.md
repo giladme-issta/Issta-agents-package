@@ -4,24 +4,13 @@ This workspace (`c:\Users\giladme\.copilot`) is the **central agent, skill, and 
 
 ---
 
-## 1. Routing — When to Use Aluf⭐ vs Direct Specialist
+## 1. The One Routing Rule
 
-**Use Aluf⭐ when:**
+> **Match your domain in Section 6 → go directly to that specialist.**
+> **No match, or the task touches multiple domains → use Aluf⭐.**
 
-- Task tier is M or L/XL (multi-file logic change, new feature, architectural work)
-- Domain is ambiguous or the task spans multiple domains
-- You're unsure which specialist handles this area
-
-**Go directly to the specialist when:**
-
-- Domain is clear from the prompt (see Quick Domain Routing below)
-- Task tier is XS or S (single-file or small bugfix — see Section 7)
-- You already know which agent owns this file/layer
-
-**Direct access saves 1 full model turn + its entire context load.** Use it aggressively for small work.
-
-> **How**: In VS Code chat, type `@Agent-Name` to invoke a specialist directly.
-> `@Hotel-Expert-2017 [fast] fix the error message on HotelsController line 42`
+In VS Code chat: `@Agent-Name your task`
+Example: `@Hotel-Expert-2017 fix the error message on HotelsController line 42`
 
 ---
 
@@ -92,26 +81,16 @@ New API + Angular consumer?   → WebAgent-Hotel-Server-Expert first, then WebAg
 
 ---
 
-## 7. Task Tier System
+## 7. Task Mode
 
-Aluf⭐ classifies every task into a tier at the start of each response. The tier controls which support agents run:
+| Mode | When | Pipeline |
+|------|------|----------|
+| `[fast]` prefix | Small change, rename, config, single-file | Specialist only — no review |
+| Default | Everything else | Specialist → Code-Reviewer |
 
-| Tier | When to use | Pipeline |
-|------|-------------|----------|
-| **XS** | `[fast]` prefix in your prompt; OR single-file rename/string/config/CSS change | Specialist only |
-| **S** | 1–3 file low-risk bugfix or minor UI tweak | Specialist → Code-Reviewer |
-| **M** | Multi-file logic change, no new feature | Memory RETRIEVE → Specialist → Code-Reviewer |
-| **L/XL** | New feature, architectural change, cross-domain | Full pipeline |
+Example: `@Hotel-Expert-2017 [fast] rename this variable`
 
-**Quick tip**: Prefix your prompt with `[fast]` for small tasks to skip Memory, Rating-Agent, and Code-Reviewer automatically.
-
-Example: `[fast] change the error message on HotelsController line 42`
-```
-
-Pure code review? → Code-Reviewer directly
-Memory store/retrieve? → Memory-Agent directly
-Unsure / multi-domain? → Aluf⭐
-
-```
+Pure code review? → `@Code-Reviewer` directly
+Unsure / multi-domain? → `@Aluf⭐`
 
 ```

@@ -5,6 +5,9 @@ const path = require("node:path");
 const os = require("node:os");
 
 const SOURCE_ROOT = path.resolve(__dirname, "..");
+const PKG = JSON.parse(
+  fs.readFileSync(path.join(SOURCE_ROOT, "package.json"), "utf8"),
+);
 const ENTRIES = [
   "agents",
   "skills",
@@ -31,6 +34,10 @@ function install() {
   const created = [];
   const updated = [];
 
+  console.log(
+    `\nInstalling Issta Copilot workspace v${PKG.version} into: ${destRoot}\n`,
+  );
+
   for (const entry of ENTRIES) {
     const srcAbs = path.join(SOURCE_ROOT, entry);
     for (const srcFile of listFiles(srcAbs)) {
@@ -49,7 +56,13 @@ function install() {
     }
   }
 
-  console.log(`\nInstalling Issta Copilot workspace into: ${destRoot}\n`);
+  // Write version stamp
+  const versionFile = path.join(destRoot, ".copilot-version");
+  fs.writeFileSync(
+    versionFile,
+    `v${PKG.version} — installed ${new Date().toISOString().slice(0, 10)}\n`,
+  );
+
   if (created.length > 0) {
     console.log(`${created.length} new file(s) created:`);
     for (const file of created) {
@@ -63,8 +76,9 @@ function install() {
     }
   }
   if (created.length === 0 && updated.length === 0) {
-    console.log("Nothing to install.");
+    console.log("All files already up to date.");
   }
+  console.log(`\nVersion stamp: v${PKG.version}`);
 }
 
 install();

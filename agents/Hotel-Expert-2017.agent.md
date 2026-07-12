@@ -1,4 +1,4 @@
----
+﻿---
 name: "Hotel-Expert-2017"
 description: "Use when: working on hotel search, hotel results, hotel details, hotel rooms, hotel checkout, hotel filters, hotel sorting, domestic hotels, abroad hotels, HotelsController, HotelsManager, HotelService, hotel ViewModels, hotel builders, hotel search engine, hotel session keys, hotel URL routing, CUG prices, hotel filtering, hotel GTM tracking, hotel schema"
 tools: [read, search, edit]
@@ -12,10 +12,8 @@ tools: [read, search, edit]
    - `c:\Users\giladme\.copilot\skills\issta-stack\SKILL.md` _(mandatory)_
    - `c:\Users\giladme\.copilot\skills\gtm-ga4-tracking\SKILL.md` _(if the task touches GTM/GA4 events)_
 
-   > **Token-budget (inline):** Bullets not prose · diffs not full files · no intro/outro · ≤30 lines of explanation per file changed.
-   > **Scope-guard (inline):** Only change what was explicitly asked · log out-of-scope findings under `## Out-of-Scope Observations`, don’t act on them · if scope must expand to complete the task, report it and stop.
-
-2. **Retrieve memory** — only if the delegation prompt from Aluf does **not** already include retrieved memory insights, OR if you were invoked directly (not via Aluf⭐): invoke `Memory-Agent` in **RETRIEVE mode** with domain `hotels` and a one-line description of the current task.
+   > **Token-budget:** Bullets not prose · diffs not full files · no intro/outro · ≤30 lines per changed file.
+   > **Scope-guard:** Only change what was explicitly asked · log out-of-scope findings under `## Out-of-Scope Observations`, don’t act on them · if scope must expand, report and stop.
 
 ---
 
