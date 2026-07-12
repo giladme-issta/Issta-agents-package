@@ -1688,7 +1688,7 @@
             <span id="focusreadout"
               >FOCUS: none — click a node to trace it</span
             >
-            <button id="clearfocus" type="button">Clear focus</button>
+            <div style="display:flex;gap:8px;"><button id="animtoggle" type="button" style="display:none">Enable animations</button><button id="clearfocus" type="button">Clear focus</button></div>
           </div>
         </div>
       </section>
@@ -2718,16 +2718,37 @@
       (function () {
         "use strict";
         var svg = document.getElementById("orgsvg");
-        var reduceMotion = window.matchMedia(
-          "(prefers-reduced-motion: reduce)",
-        ).matches;
+        var animOverride = localStorage.getItem("arch-animate") === "1";
+        var reduceMotion =
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches &&
+          !animOverride;
         if (reduceMotion) {
+          // Remove motion but keep pulse dots visible as static markers
           svg.querySelectorAll("animateMotion").forEach(function (el) {
             el.remove();
           });
           svg.querySelectorAll(".pulse").forEach(function (el) {
-            el.style.display = "none";
+            el.setAttribute("opacity", "0.4");
           });
+        }
+
+        // Show the toggle button whenever the OS has reduced-motion on
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          var animBtn = document.getElementById("animtoggle");
+          if (animBtn) {
+            animBtn.style.display = "inline";
+            animBtn.textContent = animOverride
+              ? "Disable animations"
+              : "Enable animations";
+            animBtn.addEventListener("click", function () {
+              if (localStorage.getItem("arch-animate") === "1") {
+                localStorage.removeItem("arch-animate");
+              } else {
+                localStorage.setItem("arch-animate", "1");
+              }
+              location.reload();
+            });
+          }
         }
 
         var nodes = Array.prototype.slice.call(svg.querySelectorAll(".node"));
