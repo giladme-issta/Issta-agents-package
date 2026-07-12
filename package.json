@@ -1,6 +1,6 @@
 {
   "name": "issta-copilot-setup",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "private": true,
   "description": "Installs the shared Issta Copilot agents/skills/memory workspace into ~/.copilot",
   "bin": {
