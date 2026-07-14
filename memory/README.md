@@ -1,52 +1,36 @@
 # Memory System — README
 
-This folder is managed exclusively by **Memory-Agent**.
-
 ## Purpose
 
-Provides a persistent, searchable knowledge base of tasks performed by agents in this workspace. It enables agents to:
-
-- Retrieve domain-specific insights before starting work (avoiding repeated mistakes)
-- Record key discoveries, patterns, and tricks after completing work
-- Track inter-agent collaboration history
+Persistent knowledge base for agents. Enables specialists to learn from past tasks
+and the Coach to spot trends and improve agent files weekly.
 
 ## Folder Structure
 
 ```
 memory/
-  index.md          — master index, one row per task record
-  README.md         — this file
-  domains/          — aggregated living-document insights per project domain
-  entries/          — individual task records (one file per task)
+  README.md        — this file
+  telemetry.log    — one-line append per completed task
+  domains/         — living-document insights per project domain
 ```
 
 ## How to Use
 
-### Before starting a task
+### During a task (specialist agents)
 
-Invoke Memory-Agent in **RETRIEVE** mode:
+- **Before starting**: read `memory/domains/<your-domain>.md` (skip if missing).
+- **After finishing**: if you discovered something non-obvious and reusable, append
+  ONE bullet to that file. No entry files, no index. 30-bullet cap per domain file.
 
-```
-@Memory-Agent RETRIEVE domain: hotels task: "fix CUG price mapping"
-```
+### After a task (telemetry)
 
-### After completing a task
-
-Invoke Memory-Agent in **STORE** mode:
+Append ONE line to `memory/telemetry.log`:
 
 ```
-@Memory-Agent STORE
-agents: [Hotel-Expert-V5]
-domain: hotels
-task: "Fixed CUG price mapping in GimmonixSupplierFullResults"
-insights:
-  - CUG prices are stored in a nested SpecialRates list, not the top-level Rate field
-  - Must call .ResolveCugPrice() before passing to mapper or value is always 0
-outcome: success
-files: [ITS.Adapters.Products.Hotels/Mappers/HotelResultMapper.cs]
+YYYY-MM-DD | <agent> | task: <5-word summary> | outcome: ok|partial|failed | consults: N | review: yes|no | notes: <optional, ≤10 words>
 ```
 
-## Domain Files
+### Weekly (Coach agent)
 
-Each `domains/<domain>.md` is a living document summarizing all reusable insights for that domain.
-Memory-Agent appends new bullets after each STORE operation — it never overwrites existing content.
+`@Coach` reads telemetry + domain files, proposes diffs to agent/skill files,
+compresses domain memory to the 30-bullet cap, and appends a `## Coach Review YYYY-MM-DD` marker.

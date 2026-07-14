@@ -1,0 +1,1 @@
+# telemetry.log — append ONE line per task: YYYY-MM-DD | <agent> | task: <5-word summary> | outcome: ok|partial|failed | consults: N | review: yes|no | notes: <optional, ≤10 words>

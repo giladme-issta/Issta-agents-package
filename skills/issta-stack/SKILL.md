@@ -25,11 +25,8 @@ argument-hint: "Describe what you want to build or review"
 [Route("results.aspx")]
 public ActionResult Results(SearchRequest request)
 {
-    ViewBag.Request = request;
     var resultsVM = new HotelsManager().GetHotelResultsVM(request);
-    var enableMapBox = Config.GetBoolConfigValue("EnableMapBoxResultsPage");
-    var isMobile = Issta2017.Code.Managers.GeneralManager.IsMobileDevice;
-    if (enableMapBox && !isMobile)
+    if (Config.GetBoolConfigValue("EnableMapBoxResultsPage") && !GeneralManager.IsMobileDevice)
         return GetView("ResultsNew", resultsVM);
     return GetView("Results", resultsVM);
 }

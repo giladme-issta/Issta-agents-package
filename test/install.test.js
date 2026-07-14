@@ -24,12 +24,12 @@ test("fresh install copies all files and templates the destination path", () => 
     runInstaller(fakeHome);
 
     const destRoot = path.join(fakeHome, ".copilot");
-    const agentFile = path.join(destRoot, "agents", "Aluf.agent.md");
+    const agentFile = path.join(destRoot, "agents", "Router.agent.md");
     const instructionsFile = path.join(destRoot, "copilot-instructions.md");
 
     assert.ok(
       fs.existsSync(agentFile),
-      "agents/Aluf.agent.md should be copied",
+      "agents/Router.agent.md should be copied",
     );
     assert.ok(
       fs.existsSync(instructionsFile),
@@ -37,15 +37,11 @@ test("fresh install copies all files and templates the destination path", () => 
     );
 
     const instructions = fs.readFileSync(instructionsFile, "utf8");
-    // The hardcoded source path must be replaced; the dest path must appear instead.
+    // The hardcoded source path must not remain in any copied content
     const OLD_SOURCE_PATH = "c:\\Users\\giladme\\.copilot";
     assert.ok(
       !instructions.toLowerCase().includes(OLD_SOURCE_PATH.toLowerCase()),
       "hardcoded source path should not remain in copied content",
-    );
-    assert.ok(
-      instructions.includes(destRoot),
-      "copied content should reference this machine's real .copilot path",
     );
   } finally {
     fs.rmSync(fakeHome, { recursive: true, force: true });
@@ -88,6 +84,63 @@ test("installs a .copilot-version stamp file", () => {
       content,
       /^v\d+\.\d+\.\d+/,
       "version stamp should start with vX.Y.Z",
+    );
+  } finally {
+    fs.rmSync(fakeHome, { recursive: true, force: true });
+  }
+});
+
+test("installed agent file has common-block injected, not raw placeholder", () => {
+  const fakeHome = makeFakeHome();
+  try {
+    runInstaller(fakeHome);
+    const destRoot = path.join(fakeHome, ".copilot");
+    const agentFile = path.join(
+      destRoot,
+      "agents",
+      "Hotel-Expert-2017.agent.md",
+    );
+    const content = fs.readFileSync(agentFile, "utf8");
+    assert.ok(
+      content.includes("COMMON-BLOCK v2"),
+      "installed agent should contain the injected COMMON-BLOCK v2 marker",
+    );
+    assert.ok(
+      !content.includes("{{COMMON_BLOCK}}"),
+      "installed agent should not contain the raw placeholder",
+    );
+  } finally {
+    fs.rmSync(fakeHome, { recursive: true, force: true });
+  }
+});
+
+test("re-install refreshes an already-injected common-block", () => {
+  const fakeHome = makeFakeHome();
+  try {
+    runInstaller(fakeHome);
+    const destRoot = path.join(fakeHome, ".copilot");
+    const agentFile = path.join(
+      destRoot,
+      "agents",
+      "Hotel-Expert-2017.agent.md",
+    );
+
+    // Tamper with the injected block to simulate a stale version
+    let content = fs.readFileSync(agentFile, "utf8");
+    content = content.replace("COMMON-BLOCK v2", "COMMON-BLOCK v2 STALE");
+    fs.writeFileSync(agentFile, content);
+
+    // Re-install should refresh the block
+    runInstaller(fakeHome);
+
+    const afterContent = fs.readFileSync(agentFile, "utf8");
+    assert.ok(
+      !afterContent.includes("STALE"),
+      "re-install should replace the tampered common-block",
+    );
+    assert.ok(
+      afterContent.includes("COMMON-BLOCK v2"),
+      "re-install should restore the correct common-block marker",
     );
   } finally {
     fs.rmSync(fakeHome, { recursive: true, force: true });

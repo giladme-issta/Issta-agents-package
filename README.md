@@ -2,40 +2,40 @@
 
 Installs this repository's shared Copilot workspace into `~/.copilot`.
 
+## Architecture (v2)
+
+```
+User → @Router → Lead specialist (implements)
+                      ↓  multi-domain tasks
+               Handoff note → Dependent specialist
+```
+
+```
+@Coach  (run weekly, never during tasks)
+  reads: memory/telemetry.log + memory/domains/*.md
+  outputs: trend table + proposed diffs to agent/skill files
+```
+
 ## What gets installed
 
-- `agents/`
-- `skills/`
-- `memory/`
+- `agents/` — Router + 5 specialists + Code-Reviewer + Coach (common-block injected on install)
+- `skills/` — issta-stack, angular-patterns, dotnet-clean-arch, gimmonix-adapter, gtm-ga4-tracking, owasp-security
+- `memory/` — domain insight files + telemetry.log
 - `help-docs/`
 - `copilot-instructions.md`
 
-The installer only adds missing files. Existing files in `~/.copilot` are left untouched.
-
 ## How coworkers should run it
 
-Do not try command shapes like `npx install something`; `npx` runs a package executable, so use one of the exact commands below instead.
-
-Use one of these instead:
-
-### From GitHub
-
-This uses the GitHub repository name, not the npm package name:
-
 ```bash
-npx github:giladme-issta/Issta-agents-package
-```
-
-### From npm package
-
-After this package is published, coworkers can run:
-
-```bash
+# From npm (after publish)
 npx issta-copilot-setup
+
+# From GitHub directly
+npx github:giladme-issta/Issta-agents-package
 ```
 
 ## Publish checklist
 
-1. Sign in to the npm registry you want to use.
-2. Publish this package from the repository root.
+1. Sign in to the npm registry.
+2. `npm publish` from the repository root.
 3. Share `npx issta-copilot-setup` with coworkers.

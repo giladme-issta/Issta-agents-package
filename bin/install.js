@@ -17,6 +17,44 @@ const ENTRIES = [
 ];
 const OLD_PATH_REGEX = /c:\\Users\\giladme\\\.copilot/gi;
 
+const COMMON_BLOCK_SRC = path.join(SOURCE_ROOT, "shared", "common-block.md");
+const PLACEHOLDER = "<!-- {{COMMON_BLOCK}} -->";
+const BLOCK_START_MARKER = "<!-- COMMON-BLOCK v2";
+const BLOCK_END_MARKER = "<!-- END COMMON-BLOCK -->";
+
+let _commonBlock = null;
+function getCommonBlock() {
+  if (_commonBlock === null) {
+    _commonBlock = fs.existsSync(COMMON_BLOCK_SRC)
+      ? fs.readFileSync(COMMON_BLOCK_SRC, "utf8").trimEnd()
+      : "";
+  }
+  return _commonBlock;
+}
+
+function injectCommonBlock(content) {
+  const block = getCommonBlock();
+  if (!block) return content;
+
+  // Case 1: raw placeholder → fresh inject
+  if (content.includes(PLACEHOLDER)) {
+    return content.replace(PLACEHOLDER, block);
+  }
+
+  // Case 2: already-injected block → replace region on re-install
+  const startIdx = content.indexOf(BLOCK_START_MARKER);
+  const endIdx = content.indexOf(BLOCK_END_MARKER);
+  if (startIdx !== -1 && endIdx !== -1) {
+    return (
+      content.slice(0, startIdx) +
+      block +
+      content.slice(endIdx + BLOCK_END_MARKER.length)
+    );
+  }
+
+  return content;
+}
+
 function listFiles(absPath) {
   const stat = fs.statSync(absPath);
   if (stat.isFile()) {
@@ -46,7 +84,10 @@ function install() {
 
       const isNew = !fs.existsSync(destFile);
       fs.mkdirSync(path.dirname(destFile), { recursive: true });
-      const content = fs.readFileSync(srcFile, "utf8");
+      let content = fs.readFileSync(srcFile, "utf8");
+      if (srcFile.endsWith(".agent.md")) {
+        content = injectCommonBlock(content);
+      }
       fs.writeFileSync(destFile, content.replace(OLD_PATH_REGEX, destRoot));
       if (isNew) {
         created.push(relPath);

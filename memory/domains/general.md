@@ -1,8 +1,8 @@
 # Domain Insights — General
 
 Aggregated insights that apply across multiple project areas or are not specific to any single domain.
-Maintained by Memory-Agent. Do not edit manually.
+Append bullets directly — 30-bullet cap; Coach compresses weekly.
 
 ## Reusable Patterns & Tricks
 
-<!-- Memory-Agent will append insights here after each relevant STORE operation -->
+<!-- Specialists append one bullet per insight after completing a relevant task -->
