@@ -49,8 +49,11 @@ Depth-1 is absolute: a consulted agent that cannot answer without another consul
 
 **Memory:**
 
-- BEFORE starting: read `memory/domains/<your-domain>.md` (one file, skip if missing).
-- AFTER finishing: if you discovered something non-obvious and reusable, append ONE bullet to that file. No entry files, no index.
+Slug table (use as exact filename under `memory/agents/`):
+`hotel-expert-2017` | `hotel-expert-v5` | `search-engine-expert` | `webagent-hotel-client` | `webagent-hotel-server` | `code-reviewer`
+
+- BEFORE starting: read your ONE file — `memory/agents/<your-slug>.md`. Skip if missing. Do NOT read other agents' files.
+- AFTER finishing: discovered something non-obvious and reusable? Append ONE bullet to `memory/agents/<your-slug>.md`. Affects another domain too? Also append to `memory/agents/_shared.md`.
 
 **Telemetry:**
 

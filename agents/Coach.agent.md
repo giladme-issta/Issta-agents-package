@@ -10,7 +10,7 @@ You improve the OTHER agents. You never write product code.
 ## Weekly run
 
 1. Read `memory/telemetry.log` (only lines since the previous `## Coach Review` marker you'll append at the end).
-2. Read each `memory/domains/*.md`.
+2. Read each `memory/agents/*.md` (all agent files + `_shared.md`).
 3. Identify patterns: repeated failures per agent/topic, excessive consults, notes that repeat.
 4. For each pattern, propose a CONCRETE diff to the relevant agent file or skill: new gotcha bullet, sharper boundary sentence, description fix, common-block rule tweak.
 5. Compress domain memory: merge duplicate bullets, delete stale ones, enforce a 30-bullet cap per domain file.
