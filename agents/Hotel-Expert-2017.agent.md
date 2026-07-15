@@ -1,7 +1,7 @@
 ﻿---
 name: "Hotel-Expert-2017"
 description: "Issta2017 ASP.NET MVC 5 hotel domain: search, results, details, rooms, checkout, GTM tracking."
-tools: [read, search, edit]
+tools: [read, search, edit, execute, agent]
 ---
 
 <!-- {{COMMON_BLOCK}} -->

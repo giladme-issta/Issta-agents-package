@@ -1,7 +1,7 @@
 ---
 description: "Angular hotel results page: filters, map, GA4, session expiry, BNPL/CUG display, search widget integration."
 name: "WebAgent-Expert-Hotel-Client"
-tools: [read, search, edit, agent]
+tools: [read, search, edit, execute, agent]
 model: "Claude Sonnet 4.5 (copilot)"
 agents: ["Search Engine Expert"]
 ---

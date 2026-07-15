@@ -1,7 +1,7 @@
 ﻿---
 description: ".NET 10 WebAgent hotel server: search sessions, suppliers, filtering, result mapping, BNPL/CUG flags, Workers."
 name: "WebAgent-Hotel-Server-Expert"
-tools: [read, search, edit, execute]
+tools: [read, search, edit, execute, agent]
 model: "Claude Sonnet 4.5 (copilot)"
 ---
 

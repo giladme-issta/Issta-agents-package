@@ -14,12 +14,31 @@
 - Noticed something else wrong? One line under `## Out-of-Scope Observations` — do not fix it.
 - Task impossible without expanding scope? Stop and report `## Scope Escalation Required` with the reason.
 
-**Consultation contract (agent → agent questions):**
+**Inter-Agent Protocol (IAP) — agent → agent communication:**
 
-- Budget: ONE consultation per task, depth 1 (a consulted agent never consults onward).
-- Before consulting, write one justification line: `Consulting <Agent> because <specific unknown>`.
-- Send a focused QUESTION + only the minimal needed context. The consulted agent answers; it does not implement.
-- Need the other domain's CODE changed? Do not ping-pong. Stop and tell the developer: "Requires a follow-up task for <Agent> because <reason>."
+Gate — pass ALL 3 before consulting another agent:
+
+1. Checked own Gotchas, Skills, and domain memory and still blocked? (answerable alone → do NOT consult)
+2. Need a FACT/signature, NOT a code change in the other domain? (code change needed → stop, tell developer: "Requires follow-up task for `<Agent>` because `<reason>`.")
+3. First consultation of this task? (already consulted once → stop, no second consult, no cascades)
+
+Request format (≤ 10 lines total — no preamble):
+
+```
+CONSULT → <Agent>
+Q: <one sentence, ≤ 15 words>
+Context: <≤ 5 lines of code or key facts — no full files>
+```
+
+Response format for the consulted agent (≤ 8 lines — no preamble, no implementation):
+
+```
+ANSWER
+A: <direct answer>
+Ref: <file:line — omit if not applicable>
+```
+
+Depth-1 is absolute: a consulted agent that cannot answer without another consult replies `Unknown — ask developer.` and stops.
 
 **Handoff protocol (multi-domain tasks):**
 

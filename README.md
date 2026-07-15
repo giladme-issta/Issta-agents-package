@@ -4,17 +4,34 @@ Installs this repository's shared Copilot workspace into `~/.copilot`.
 
 ## Architecture (v2)
 
-```
-User → @Router → Lead specialist (implements)
-                      ↓  multi-domain tasks
-               Handoff note → Dependent specialist
+```mermaid
+flowchart TD
+    Dev([Developer]) --> Router
+
+    Router -->|routes + leads/depends| E1[Hotel-Expert-2017]
+    Router -->|routes + leads/depends| E2[Hotel-Expert-V5]
+    Router -->|routes + leads/depends| E3[search-engine-expert]
+    Router -->|routes + leads/depends| E4[WebAgent-Expert-Hotel-Client]
+    Router -->|routes + leads/depends| E5[WebAgent-Hotel-Server-Expert]
+
+    E1 <-->|IAP consult| E3
+    E2 <-->|IAP consult| E1
+    E2 <-->|IAP consult| E4
+    E4 <-->|IAP consult| E3
+    E5 <-->|IAP consult| E4
+    E5 <-->|IAP consult| E2
+
+    E1 & E2 & E3 & E4 & E5 -->|"handoffs/<slug>.md"| NextAgent([Next Agent])
+    E1 & E2 & E3 & E4 & E5 -.->|triggers when: security/auth/payments/>3 files| CR[Code-Reviewer]
+
+    Coach -->|weekly: reads telemetry + memory, proposes diffs| AgentFiles[(Agent Files)]
 ```
 
-```
-@Coach  (run weekly, never during tasks)
-  reads: memory/telemetry.log + memory/domains/*.md
-  outputs: trend table + proposed diffs to agent/skill files
-```
+**3 layers:**
+
+1. **Entry** — `Router` classifies and dispatches to one or two experts (lead + dependent). Never implements.
+2. **Experts** (5 agents) — each owns a strict domain slice. Can read/search/edit/execute, consult a peer via IAP (one call, depth-1), and hand off via `handoffs/<slug>.md`.
+3. **Support** — `Code-Reviewer` triggered conditionally (security/payments/large diffs). `Coach` runs weekly, proposes agent improvements from telemetry.
 
 ## What gets installed
 

@@ -1,7 +1,7 @@
 ﻿---
 description: "Angular search engine widget and library: multi-product tab-driven search form, engines, inputs, config, registry."
 name: "Search Engine Expert"
-tools: [read, search, edit]
+tools: [read, search, edit, execute, agent]
 ---
 
 <!-- {{COMMON_BLOCK}} -->

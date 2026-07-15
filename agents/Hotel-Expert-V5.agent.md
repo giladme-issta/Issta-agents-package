@@ -1,7 +1,7 @@
 ﻿---
 name: "Hotel-Expert-V5"
 description: "ITS V5 international hotels and Gimmonix adapter: search, details, book, cancellation, financial reporting."
-tools: [read, search, edit]
+tools: [read, search, edit, execute, agent]
 ---
 
 <!-- {{COMMON_BLOCK}} -->
